@@ -7,7 +7,6 @@ env:
     - OS_ARCH=x86_64
   matrix:
     - OS_TYPE=fedora OS_DIST=fedora OS_VERSION=27
-    - OS_TYPE=centos OS_DIST=epel OS_VERSION=7
 
 services:
   - docker
@@ -17,11 +16,15 @@ install: true
 script:
   - docker run -v ${PWD}:/sources -v ${PWD}:/output:Z -e "RPM_ONLY=1" ${DOCKER_IMAGE}:${OS_TYPE}-${OS_VERSION}
 
+before_deploy:
+  - export RELEASE_PKG_FILE=$(ls *.rpm)
+  - echo "deploying $RELEASE_PKG_FILE to GitHub releases"
 
 deploy:
   provider: releases
-  api_key: "GITHUB OAUTH TOKEN"
-  file: "FILE TO UPLOAD"
+  api_key: 0eda32db03368a3c8dbc18270a5ff74a88afd7f0
+file_glob: true
+  file: "$RELEASE_PKG_FILE"
   skip_cleanup: true
   on:
     tags: true
