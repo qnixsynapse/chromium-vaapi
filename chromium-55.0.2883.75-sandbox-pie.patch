@@ -1,0 +1,31 @@
+--- sandbox/linux/BUILD.gn	2016-08-03 06:31:07.000000000 +0200
++++ sandbox/linux/BUILD.gn	2016-08-03 06:31:07.000000000 +0200
+@@ -297,12 +297,17 @@
+
+     cflags = [
+       # For ULLONG_MAX
+-      "-std=gnu99",
++      "-std=gnu99",
++      "-fPIE",
+
+       # These files have a suspicious comparison.
+       # TODO fix this and re-enable this warning.
+       "-Wno-sign-compare",
+     ]
++
++    ldflags = [
++      "-pie",
++    ]
+
+     import("//build/config/compiler/compiler.gni")
+     import("//build/config/sanitizers/sanitizers.gni")
+@@ -313,7 +317,7 @@
+       # other flags that executable_config might have.
+       configs -= [ "//build/config:executable_config" ]
+       if (!use_gold) {
+-        ldflags = [ "-Wl,--disable-new-dtags" ]
++        ldflags += [ "-Wl,--disable-new-dtags" ]
+       }
+     }
+
+

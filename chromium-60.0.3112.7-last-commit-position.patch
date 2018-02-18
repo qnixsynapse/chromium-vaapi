@@ -1,0 +1,28 @@
+diff -urN chromium-60.0.3112.7.orig/tools/gn/BUILD.gn chromium-60.0.3112.7/tools/gn/BUILD.gn
+--- chromium-60.0.3112.7.orig/tools/gn/BUILD.gn	2017-06-01 13:56:22.707134279 +0300
++++ chromium-60.0.3112.7/tools/gn/BUILD.gn	2017-06-01 13:57:53.520300832 +0300
+@@ -268,7 +268,6 @@
+ 
+   deps = [
+     ":gn_lib",
+-    ":last_commit_position",
+     "//base",
+     "//build/config:exe_and_shlib_deps",
+     "//build/win:default_exe_manifest",
+diff -urN chromium-60.0.3112.7.orig/tools/gn/gn_main.cc chromium-60.0.3112.7/tools/gn/gn_main.cc
+--- chromium-60.0.3112.7.orig/tools/gn/gn_main.cc	2017-06-01 13:56:22.688134035 +0300
++++ chromium-60.0.3112.7/tools/gn/gn_main.cc	2017-06-01 13:58:13.566558338 +0300
+@@ -12,13 +12,7 @@
+ #include "tools/gn/standard_out.h"
+ #include "tools/gn/switches.h"
+ 
+-// Only the GN-generated build makes this header for now.
+-// TODO(brettw) consider adding this if we need it in GYP.
+-#if defined(GN_BUILD)
+-#include "tools/gn/last_commit_position.h"
+-#else
+ #define LAST_COMMIT_POSITION "UNKNOWN"
+-#endif
+ 
+ namespace {
+ 

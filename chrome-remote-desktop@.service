@@ -1,0 +1,14 @@
+[Unit]
+Description="Chrome Remote Desktop host daemon"
+
+[Service]
+User=%i
+Environment=HOME=%h
+ExecStart=@@CRD_PATH@@/chrome-remote-desktop --start --foreground
+ExecStop=@@CRD_PATH@@/chrome-remote-desktop --stop
+ExecReload=@@CRD_PATH@@/chrome-remote-desktop --reload
+Restart=always
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+diff -urN chromium-62.0.3202.52.orig/third_party/WebKit/Source/platform/blob/BlobData.cpp chromium-62.0.3202.52/third_party/WebKit/Source/platform/blob/BlobData.cpp
+--- chromium-62.0.3202.52.orig/third_party/WebKit/Source/platform/blob/BlobData.cpp	2017-10-16 18:26:04.342150526 +0300
++++ chromium-62.0.3202.52/third_party/WebKit/Source/platform/blob/BlobData.cpp	2017-10-18 15:27:34.138822719 +0300
+@@ -295,7 +295,7 @@
+ 
+     size_t current_memory_population = 0;
+     Vector<DataElementPtr> elements;
+-    const DataElementPtr null_element = nullptr;
++    const DataElementPtr null_element;
+     BlobBytesProvider* last_bytes_provider = nullptr;
+     RefPtr<WebTaskRunner> file_runner = Platform::Current()->FileTaskRunner();
+ 

@@ -1,0 +1,12 @@
+diff -urN chromium-63.0.3239.70.orig/ui/gfx/render_text_harfbuzz.h chromium-63.0.3239.70/ui/gfx/render_text_harfbuzz.h
+--- chromium-63.0.3239.70.orig/ui/gfx/render_text_harfbuzz.h	2017-11-30 18:06:03.802353166 +0300
++++ chromium-63.0.3239.70/ui/gfx/render_text_harfbuzz.h	2017-12-01 15:23:13.350530783 +0300
+@@ -16,7 +16,7 @@
+ #include "third_party/icu/source/common/unicode/uscript.h"
+ #include "ui/gfx/render_text.h"
+ 
+-#include <hb.h>
++#include <harfbuzz/hb.h>
+ 
+ namespace base {
+ namespace i18n {

@@ -1,0 +1,44 @@
+diff -up chromium-45.0.2454.101/native_client_sdk/src/libraries/nacl_io/path.h.pathmax chromium-45.0.2454.101/native_client_sdk/src/libraries/nacl_io/path.h
+--- chromium-45.0.2454.101/native_client_sdk/src/libraries/nacl_io/path.h.pathmax	2015-10-07 11:26:11.813477839 -0400
++++ chromium-45.0.2454.101/native_client_sdk/src/libraries/nacl_io/path.h	2015-10-07 11:26:40.845845054 -0400
+@@ -12,6 +12,11 @@
+ 
+ #include "sdk_util/macros.h"
+ 
++/* Needed for PATH_MAX */
++#ifndef PATH_MAX
++#define PATH_MAX 4096
++#endif
++
+ namespace nacl_io {
+ 
+ class Path {
+diff -up chromium-45.0.2454.101/native_client/src/untrusted/nacl/getcwd.c.pathmax chromium-45.0.2454.101/native_client/src/untrusted/nacl/getcwd.c
+--- chromium-45.0.2454.101/native_client/src/untrusted/nacl/getcwd.c.pathmax	2015-08-22 15:02:08.000000000 -0400
++++ chromium-45.0.2454.101/native_client/src/untrusted/nacl/getcwd.c	2015-10-07 10:58:56.172018783 -0400
+@@ -11,6 +11,10 @@
+ 
+ #include <errno.h>
+ #include <limits.h>
++/* Needed for PATH_MAX */
++#ifndef PATH_MAX
++#define PATH_MAX 4096
++#endif
+ #include <stdlib.h>
+ #include <string.h>
+ #include <unistd.h>
+diff -up chromium-45.0.2454.101/native_client_sdk/src/libraries/nacl_io/syscalls/realpath.c.pathmax chromium-45.0.2454.101/native_client_sdk/src/libraries/nacl_io/syscalls/realpath.c
+--- chromium-45.0.2454.101/native_client_sdk/src/libraries/nacl_io/syscalls/realpath.c.pathmax	2015-10-09 10:57:38.424348662 -0400
++++ chromium-45.0.2454.101/native_client_sdk/src/libraries/nacl_io/syscalls/realpath.c	2015-10-09 10:57:51.541059938 -0400
+@@ -13,6 +13,11 @@
+ 
+ #include "sdk_util/macros.h"
+ 
++/* Needed for PATH_MAX */
++#ifndef PATH_MAX
++#define PATH_MAX 4096
++#endif
++
+ EXTERN_C_BEGIN
+ 
+ #if defined(__native_client__)

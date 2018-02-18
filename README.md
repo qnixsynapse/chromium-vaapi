@@ -1,2 +1,12 @@
-# Chromium-vaapi
-Chromium browser for Fedora Linux with video acceleration patches.
+chromium
+========
+
+* Название:                   chromium
+* Мейнтейнер:                 Аркадий Шейн
+* Репозиторий:                russianfedora-free
+* Почему не в апстриме:       В апстриме есть (пока тестовая) версия
+                              с ошибками в некоторых xml,
+                              падающая на ютубе,
+                              без gtk3,
+                              без chromedriver
+* Комментарий:                Браузер, который работает быстро

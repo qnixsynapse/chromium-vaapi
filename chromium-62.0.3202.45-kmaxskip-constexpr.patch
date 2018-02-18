@@ -1,0 +1,12 @@
+diff -urN chromium-62.0.3202.45.orig/cc/paint/paint_op_buffer.cc chromium-62.0.3202.45/cc/paint/paint_op_buffer.cc
+--- chromium-62.0.3202.45.orig/cc/paint/paint_op_buffer.cc	2017-10-05 13:28:38.753248401 +0300
++++ chromium-62.0.3202.45/cc/paint/paint_op_buffer.cc	2017-10-05 13:36:21.103948901 +0300
+@@ -336,7 +336,7 @@
+ #undef TYPES
+ 
+ const SkRect PaintOp::kUnsetRect = {SK_ScalarInfinity, 0, 0, 0};
+-const size_t PaintOp::kMaxSkip;
++constexpr size_t PaintOp::kMaxSkip;
+ 
+ std::string PaintOpTypeToString(PaintOpType type) {
+   switch (type) {
