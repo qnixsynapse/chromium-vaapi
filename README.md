@@ -25,4 +25,4 @@ Intel GPU:libva-intel-driver
 
 
 
-Build system is provided by travis-ci.org and docker for Fedora image build environment is by alectolytic/rpmbuilder
+Ascended to fedora copr:https://copr.fedorainfracloud.org/coprs/hellbangerkarna/Chromium-Vaapi/
