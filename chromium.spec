@@ -193,6 +193,8 @@ Patch61:	chromium-62.0.3202.45-rvalue-fix.patch
 Patch62:	chromium-webrtc-r0.patch
 Patch63:	chromium-63.0.3289.84-nolibc++.patch
 Patch64:	chromium-63.0.3289.84-fix-ft-hb-unbundle.patch
+Fixed an issue which prevents Amd GPU users from getting Hardware acceleration and fail to find swiftshader library.
+Patch65:	chromium-64.0.3282.167-f172c7c.patch
 
 ### Russian Fedora Patches ###
 # Clang Gentoo patch: ftp://mirror.yandex.ru/gentoo-portage/www-client/chromium/files/chromium-clang-r2.patch
@@ -655,6 +657,7 @@ sed -i 's@audio_processing//@audio_processing/@g' third_party/webrtc/modules/aud
 #%patch62 -p1 -b .webrtc
 %patch63 -p1 -b .nolibc++
 %patch64 -p1 -b .ft-hb
+%patch65 -p1 -b  .f172c7c
 
 #%patch52 -p1 -b .fixgccagain
 %patch53 -p1 -b .nogccoptmath
