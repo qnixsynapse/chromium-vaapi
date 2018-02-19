@@ -31,7 +31,7 @@
 %global build_remoting_app 0
 
 # Build Chrome Remote Desktop
-%global build_remote_desktop 1
+%global build_remote_desktop 0
 
 # AddressSanitizer mode
 # https://www.chromium.org/developers/testing/addresssanitizer
@@ -193,7 +193,7 @@ Patch61:	chromium-62.0.3202.45-rvalue-fix.patch
 Patch62:	chromium-webrtc-r0.patch
 Patch63:	chromium-63.0.3289.84-nolibc++.patch
 Patch64:	chromium-63.0.3289.84-fix-ft-hb-unbundle.patch
-Fixed an issue which prevents Amd GPU users from getting Hardware acceleration and fail to find swiftshader library.
+#Fixed an issue which prevents Amd GPU users from getting Hardware acceleration and fail to find swiftshader library.
 Patch65:	chromium-64.0.3282.167-f172c7c.patch
 
 ### Russian Fedora Patches ###
