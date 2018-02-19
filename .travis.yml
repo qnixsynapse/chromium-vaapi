@@ -4,7 +4,6 @@ language: python
 env:
   global:
     - DOCKER_IMAGE=alectolytic/rpmbuilder
-    - COPR_REPOSITORY=https://copr.fedorainfracloud.org/coprs/hellbangerkarna/Chromium-Vaapi/
     - OS_ARCH=x86_64
   matrix:
     - OS_TYPE=fedora OS_DIST=fedora OS_VERSION=27
