@@ -23,12 +23,12 @@ script:
   - export RELEASE_PKG_FILE=$(ls *.src.rpm)
   -ls *.src.rpm
   - echo "deploying $RELEASE_PKG_FILE to GitHub releases"
--
--deploy:
--  provider: releases
--  api_key: "0eda32db03368a3c8dbc18270a5ff74a88afd7f0"
--  file_glob: true
--  file: "$RELEASE_PKG_FILE"
--  skip_cleanup: true
--  on:
--    tags: true
+
+deploy:
+   provider: releases
+   api_key: "0eda32db03368a3c8dbc18270a5ff74a88afd7f0"
+   file_glob: true
+   file: "$RELEASE_PKG_FILE"
+   skip_cleanup: true
+    on:
+      tags: true
