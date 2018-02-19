@@ -23,7 +23,7 @@ after_success:
   - openssl aes-256-cbc -K $<ENCRYPTED KEY VAR> -iv $<ENCRYPTED KEY VAR> -in .copr.enc -out .copr -d
   - if [ ! -z "${TRAVIS_TAG}" ]; then copr-cli --config .copr build -r ${OS_DIST}-${OS_VERSION}-${OS_ARCH} ${COPR_REPOSITORY} *.src.rpm; fi
 -before_deploy:
--  - export RELEASE_PKG_FILE=$(ls *.rpm)
+-  - export RELEASE_PKG_FILE=$(ls *.src.rpm)
 -  - echo "deploying $RELEASE_PKG_FILE to GitHub releases"
 -
 -deploy:
