@@ -669,7 +669,7 @@ sed -i 's@audio_processing//@audio_processing/@g' third_party/webrtc/modules/aud
 
 %if 0%{vaapi}
 %patch600 -p1 -b .vaapi
-#%patch601 -p1 -b .specify-max-resolution
+%patch601 -p1 -b .specify-max-resolution
 %endif
 
 %if 0%{?asan}
