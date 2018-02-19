@@ -50,7 +50,7 @@
  %global nacl 0
  %global nonacl 1
  %else
- %global nacl 1
+ %global nacl 0
  %global nonacl 0
  %endif
 %endif
