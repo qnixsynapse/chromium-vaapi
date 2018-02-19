@@ -1,0 +1,317 @@
+From f172c7c7e50d9a074146eae93ae6e963426425f0 Mon Sep 17 00:00:00 2001
+From: Zhenyao Mo <zmo@chromium.org>
+Date: Sat, 20 Jan 2018 05:39:01 +0000
+Subject: [PATCH] On GPU startup, don't switch to SwiftShader if blacklist decision isn't final.
+
+On Linux AMD, we have an entry to blacklist all GPU features on AMD GPU, except
+for newer drivers on AMD / Mesa drivers etc.
+
+If we fallback to SwiftShader on vendor_id/device_id, then we put all Linux AMD
+to SwiftShader unnecessarily.
+
+BUG=719213
+TEST=linux AMD
+R=piman@chromium.org,kbr@chromium.org
+TBR=boliu@chromium.org
+
+Cq-Include-Trybots: master.tryserver.chromium.android:android_optional_gpu_tests_rel;master.tryserver.chromium.linux:linux_optional_gpu_tests_rel;master.tryserver.chromium.mac:mac_optional_gpu_tests_rel;master.tryserver.chromium.win:win_optional_gpu_tests_rel
+Change-Id: I6e6209931025383272669ee731bd503ccd6b94ba
+Reviewed-on: https://chromium-review.googlesource.com/877410
+Commit-Queue: Zhenyao Mo <zmo@chromium.org>
+Reviewed-by: Zhenyao Mo <zmo@chromium.org>
+Reviewed-by: Antoine Labour <piman@chromium.org>
+Reviewed-by: Kenneth Russell <kbr@chromium.org>
+Cr-Commit-Position: refs/heads/master@{#530757}
+---
+
+diff --git a/android_webview/browser/deferred_gpu_command_service.cc b/android_webview/browser/deferred_gpu_command_service.cc
+index 8aa9b00..d051d64 100644
+--- a/android_webview/browser/deferred_gpu_command_service.cc
++++ b/android_webview/browser/deferred_gpu_command_service.cc
+@@ -66,12 +66,12 @@
+     gpu::GPUInfo gpu_info =
+         content::GpuDataManager::GetInstance()->GetGPUInfo();
+     DCHECK(base::CommandLine::InitializedForCurrentProcess());
+-    gpu::GpuFeatureInfo gpu_feature_info =
+-        gpu::ComputeGpuFeatureInfo(gpu_info,
+-                                   false,  // ignore_gpu_blacklist
+-                                   false,  // disable_gpu_driver_bug_workarounds
+-                                   false,  // log_gpu_control_list_decisions
+-                                   base::CommandLine::ForCurrentProcess());
++    gpu::GpuFeatureInfo gpu_feature_info = gpu::ComputeGpuFeatureInfo(
++        gpu_info,
++        false,  // ignore_gpu_blacklist
++        false,  // disable_gpu_driver_bug_workarounds
++        false,  // log_gpu_control_list_decisions
++        base::CommandLine::ForCurrentProcess(), nullptr);
+     g_service.Get() = new DeferredGpuCommandService(gpu_info, gpu_feature_info);
+   }
+ }
+diff --git a/content/common/sandbox_init_mac.cc b/content/common/sandbox_init_mac.cc
+index 92b49c5..06c9ead 100644
+--- a/content/common/sandbox_init_mac.cc
++++ b/content/common/sandbox_init_mac.cc
+@@ -53,7 +53,8 @@
+         gpu::GpuFeatureInfo gpu_feature_info = gpu::ComputeGpuFeatureInfo(
+             gpu_info, gpu_preferences.ignore_gpu_blacklist,
+             gpu_preferences.disable_gpu_driver_bug_workarounds,
+-            gpu_preferences.log_gpu_control_list_decisions, command_line);
++            gpu_preferences.log_gpu_control_list_decisions, command_line,
++            nullptr);
+         gpu::CacheGpuFeatureInfo(gpu_feature_info);
+         // Preload either the desktop GL or the osmesa so, depending on the
+         // --use-gl flag.
+diff --git a/content/test/content_test_suite.cc b/content/test/content_test_suite.cc
+index 54b69fc..56d19f4 100644
+--- a/content/test/content_test_suite.cc
++++ b/content/test/content_test_suite.cc
+@@ -94,7 +94,7 @@
+                                    false,  // ignore_gpu_blacklist
+                                    false,  // disable_gpu_driver_bug_workarounds
+                                    false,  // log_gpu_control_list_decisions
+-                                   command_line);
++                                   command_line, nullptr);
+     gpu::InProcessCommandBuffer::InitializeDefaultServiceForTesting(
+         gpu_feature_info);
+     gl::GLSurfaceTestSupport::InitializeNoExtensionsOneOff();
+diff --git a/gpu/command_buffer/tests/gl_tests_main.cc b/gpu/command_buffer/tests/gl_tests_main.cc
+index 6a985ab..e469073 100644
+--- a/gpu/command_buffer/tests/gl_tests_main.cc
++++ b/gpu/command_buffer/tests/gl_tests_main.cc
+@@ -31,12 +31,12 @@
+   base::FeatureList::InitializeInstance(std::string(), std::string());
+   gpu::GPUInfo gpu_info;
+   gpu::CollectBasicGraphicsInfo(&gpu_info);
+-  gpu::GLManager::g_gpu_feature_info =
+-      gpu::ComputeGpuFeatureInfo(gpu_info,
+-                                 false,  // ignore_gpu_blacklist
+-                                 false,  // disable_gpu_driver_bug_workarounds
+-                                 false,  // log_gpu_control_list_decisions
+-                                 base::CommandLine::ForCurrentProcess());
++  gpu::GLManager::g_gpu_feature_info = gpu::ComputeGpuFeatureInfo(
++      gpu_info,
++      false,  // ignore_gpu_blacklist
++      false,  // disable_gpu_driver_bug_workarounds
++      false,  // log_gpu_control_list_decisions
++      base::CommandLine::ForCurrentProcess(), nullptr);
+   gl::init::InitializeGLNoExtensionsOneOff();
+   gl::init::SetDisabledExtensionsPlatform(
+       gpu::GLManager::g_gpu_feature_info.disabled_extensions);
+diff --git a/gpu/config/gpu_util.cc b/gpu/config/gpu_util.cc
+index 2d039f3..f6a1bf6 100644
+--- a/gpu/config/gpu_util.cc
++++ b/gpu/config/gpu_util.cc
+@@ -330,7 +330,9 @@
+                                      bool ignore_gpu_blacklist,
+                                      bool disable_gpu_driver_bug_workarounds,
+                                      bool log_gpu_control_list_decisions,
+-                                     base::CommandLine* command_line) {
++                                     base::CommandLine* command_line,
++                                     bool* needs_more_info) {
++  DCHECK(!needs_more_info || !(*needs_more_info));
+   bool use_swift_shader = false;
+   bool use_swift_shader_for_webgl = false;
+   if (command_line->HasSwitch(switches::kUseGL)) {
+@@ -359,6 +361,9 @@
+     blacklisted_features = list->MakeDecision(
+         GpuControlList::kOsAny, std::string(), gpu_info, target_test_group);
+     gpu_feature_info.applied_gpu_blacklist_entries = list->GetActiveEntries();
++    if (needs_more_info) {
++      *needs_more_info = list->needs_more_info();
++    }
+   }
+ 
+   gpu_feature_info.status_values[GPU_FEATURE_TYPE_GPU_RASTERIZATION] =
+diff --git a/gpu/config/gpu_util.h b/gpu/config/gpu_util.h
+index b4ac30f..95e5ed4 100644
+--- a/gpu/config/gpu_util.h
++++ b/gpu/config/gpu_util.h
+@@ -45,7 +45,8 @@
+                       bool ignore_gpu_blacklist,
+                       bool disable_gpu_driver_bug_workarounds,
+                       bool log_gpu_control_list_decisions,
+-                      base::CommandLine* command_line);
++                      base::CommandLine* command_line,
++                      bool* needs_more_info);
+ 
+ GPU_EXPORT void SetKeysForCrashLogging(const GPUInfo& gpu_info);
+ 
+diff --git a/gpu/config/gpu_util_unittest.cc b/gpu/config/gpu_util_unittest.cc
+index 17b3af1..0af924a 100644
+--- a/gpu/config/gpu_util_unittest.cc
++++ b/gpu/config/gpu_util_unittest.cc
+@@ -85,8 +85,8 @@
+   {
+     base::CommandLine command_line(base::CommandLine::NO_PROGRAM);
+     GPUInfo gpu_info;
+-    GpuFeatureInfo gpu_feature_info =
+-        ComputeGpuFeatureInfo(gpu_info, false, false, false, &command_line);
++    GpuFeatureInfo gpu_feature_info = ComputeGpuFeatureInfo(
++        gpu_info, false, false, false, &command_line, nullptr);
+     EXPECT_FALSE(gpu_feature_info.IsWorkaroundEnabled(
+         USE_GPU_DRIVER_WORKAROUND_FOR_TESTING));
+   }
+@@ -97,8 +97,8 @@
+                                        USE_GPU_DRIVER_WORKAROUND_FOR_TESTING),
+                                    "1");
+     GPUInfo gpu_info;
+-    GpuFeatureInfo gpu_feature_info =
+-        ComputeGpuFeatureInfo(gpu_info, false, false, false, &command_line);
++    GpuFeatureInfo gpu_feature_info = ComputeGpuFeatureInfo(
++        gpu_info, false, false, false, &command_line, nullptr);
+     EXPECT_TRUE(gpu_feature_info.IsWorkaroundEnabled(
+         USE_GPU_DRIVER_WORKAROUND_FOR_TESTING));
+   }
+@@ -108,8 +108,8 @@
+     command_line.AppendSwitchASCII(switches::kGpuDriverBugListTestGroup, "1");
+     // See gpu/config/gpu_driver_bug_list.json, test_group 1, entry 215.
+     GPUInfo gpu_info;
+-    GpuFeatureInfo gpu_feature_info =
+-        ComputeGpuFeatureInfo(gpu_info, false, false, false, &command_line);
++    GpuFeatureInfo gpu_feature_info = ComputeGpuFeatureInfo(
++        gpu_info, false, false, false, &command_line, nullptr);
+     EXPECT_TRUE(gpu_feature_info.IsWorkaroundEnabled(
+         USE_GPU_DRIVER_WORKAROUND_FOR_TESTING));
+   }
+@@ -122,8 +122,8 @@
+                                    "0");
+     // See gpu/config/gpu_driver_bug_list.json, test_group 1, entry 215.
+     GPUInfo gpu_info;
+-    GpuFeatureInfo gpu_feature_info =
+-        ComputeGpuFeatureInfo(gpu_info, false, false, false, &command_line);
++    GpuFeatureInfo gpu_feature_info = ComputeGpuFeatureInfo(
++        gpu_info, false, false, false, &command_line, nullptr);
+     EXPECT_FALSE(gpu_feature_info.IsWorkaroundEnabled(
+         USE_GPU_DRIVER_WORKAROUND_FOR_TESTING));
+   }
+diff --git a/gpu/gles2_conform_support/egl/thread_state.cc b/gpu/gles2_conform_support/egl/thread_state.cc
+index 282ccd6..948f860 100644
+--- a/gpu/gles2_conform_support/egl/thread_state.cc
++++ b/gpu/gles2_conform_support/egl/thread_state.cc
+@@ -87,7 +87,7 @@
+             false,  // ignore_gpu_blacklist
+             false,  // disable_gpu_driver_bug_workarounds
+             false,  // log_gpu_control_list_decisions
+-            command_line);
++            command_line, nullptr);
+         Context::SetPlatformGpuFeatureInfo(gpu_feature_info);
+       }
+ 
+diff --git a/gpu/ipc/service/gpu_init.cc b/gpu/ipc/service/gpu_init.cc
+index e0a5728..dcb3f91 100644
+--- a/gpu/ipc/service/gpu_init.cc
++++ b/gpu/ipc/service/gpu_init.cc
+@@ -110,6 +110,10 @@
+     const GPUInfo* gpu_info,
+     const GpuFeatureInfo* gpu_feature_info) {
+   gpu_preferences_ = gpu_preferences;
++  // Blacklist decisions based on basic GPUInfo may not be final. It might
++  // need more context based GPUInfo. In such situations, switching to
++  // SwiftShader needs to wait until creating a context.
++  bool needs_more_info = false;
+ #if !defined(OS_ANDROID)
+   if (gpu_info) {
+     gpu_info_ = *gpu_info;
+@@ -138,7 +142,8 @@
+     gpu_feature_info_ = gpu::ComputeGpuFeatureInfo(
+         gpu_info_, gpu_preferences.ignore_gpu_blacklist,
+         gpu_preferences.disable_gpu_driver_bug_workarounds,
+-        gpu_preferences.log_gpu_control_list_decisions, command_line);
++        gpu_preferences.log_gpu_control_list_decisions, command_line,
++        &needs_more_info);
+   }
+   if (gpu::SwitchableGPUsSupported(gpu_info_, *command_line)) {
+     gpu::InitializeSwitchableGPUs(
+@@ -207,7 +212,7 @@
+   ui::OzonePlatform::InitializeForGPU(params);
+ #endif
+ 
+-  bool use_swiftshader = ShouldEnableSwiftShader(command_line);
++  bool use_swiftshader = ShouldEnableSwiftShader(command_line, needs_more_info);
+   // Load and initialize the GL implementation and locate the GL entry points if
+   // needed. This initialization may have already happened if running in the
+   // browser process, for example.
+@@ -238,8 +243,8 @@
+     gpu_feature_info_ = gpu::ComputeGpuFeatureInfo(
+         gpu_info_, gpu_preferences.ignore_gpu_blacklist,
+         gpu_preferences.disable_gpu_driver_bug_workarounds,
+-        gpu_preferences.log_gpu_control_list_decisions, command_line);
+-    use_swiftshader = ShouldEnableSwiftShader(command_line);
++        gpu_preferences.log_gpu_control_list_decisions, command_line, nullptr);
++    use_swiftshader = ShouldEnableSwiftShader(command_line, false);
+     if (use_swiftshader) {
+       gl::init::ShutdownGL(true);
+       gl_initialized = gl::init::InitializeGLNoExtensionsOneOff();
+@@ -332,6 +337,7 @@
+     }
+ #endif
+   }
++  bool needs_more_info = false;
+   if (gpu_feature_info) {
+     gpu_feature_info_ = *gpu_feature_info;
+   } else {
+@@ -340,7 +346,8 @@
+       gpu_feature_info_ = gpu::ComputeGpuFeatureInfo(
+           gpu_info_, gpu_preferences.ignore_gpu_blacklist,
+           gpu_preferences.disable_gpu_driver_bug_workarounds,
+-          gpu_preferences.log_gpu_control_list_decisions, command_line);
++          gpu_preferences.log_gpu_control_list_decisions, command_line,
++          &needs_more_info);
+     }
+ #endif
+   }
+@@ -349,7 +356,7 @@
+         gpu_feature_info_.enabled_gpu_driver_bug_workarounds);
+   }
+ 
+-  bool use_swiftshader = ShouldEnableSwiftShader(command_line);
++  bool use_swiftshader = ShouldEnableSwiftShader(command_line, needs_more_info);
+   if (!gl::init::InitializeGLNoExtensionsOneOff()) {
+     VLOG(1) << "gl::init::InitializeGLNoExtensionsOneOff failed";
+     return;
+@@ -360,8 +367,8 @@
+     gpu_feature_info_ = gpu::ComputeGpuFeatureInfo(
+         gpu_info_, gpu_preferences.ignore_gpu_blacklist,
+         gpu_preferences.disable_gpu_driver_bug_workarounds,
+-        gpu_preferences.log_gpu_control_list_decisions, command_line);
+-    use_swiftshader = ShouldEnableSwiftShader(command_line);
++        gpu_preferences.log_gpu_control_list_decisions, command_line, nullptr);
++    use_swiftshader = ShouldEnableSwiftShader(command_line, false);
+     if (use_swiftshader) {
+       gl::init::ShutdownGL(true);
+       if (!gl::init::InitializeGLNoExtensionsOneOff()) {
+@@ -383,15 +390,17 @@
+   }
+ }
+ 
+-bool GpuInit::ShouldEnableSwiftShader(base::CommandLine* command_line) {
++bool GpuInit::ShouldEnableSwiftShader(base::CommandLine* command_line,
++                                      bool blacklist_needs_more_info) {
+ #if BUILDFLAG(ENABLE_SWIFTSHADER)
+   if (gpu_preferences_.disable_software_rasterizer)
+     return false;
+   // Don't overwrite user preference.
+   if (command_line->HasSwitch(switches::kUseGL))
+     return false;
+-  if (gpu_feature_info_.status_values[GPU_FEATURE_TYPE_ACCELERATED_WEBGL] !=
+-      kGpuFeatureStatusEnabled) {
++  if (!blacklist_needs_more_info &&
++      gpu_feature_info_.status_values[GPU_FEATURE_TYPE_ACCELERATED_WEBGL] !=
++          kGpuFeatureStatusEnabled) {
+     command_line->AppendSwitchASCII(
+         switches::kUseGL, gl::kGLImplementationSwiftShaderForWebGLName);
+     return true;
+diff --git a/gpu/ipc/service/gpu_init.h b/gpu/ipc/service/gpu_init.h
+index ee94bed..33e7cbd 100644
+--- a/gpu/ipc/service/gpu_init.h
++++ b/gpu/ipc/service/gpu_init.h
+@@ -69,7 +69,8 @@
+   GpuPreferences gpu_preferences_;
+   bool init_successful_ = false;
+ 
+-  bool ShouldEnableSwiftShader(base::CommandLine* command_line);
++  bool ShouldEnableSwiftShader(base::CommandLine* command_line,
++                               bool blacklist_needs_more_info);
+   void AdjustInfoToSwiftShader();
+   DISALLOW_COPY_AND_ASSIGN(GpuInit);
+ };
