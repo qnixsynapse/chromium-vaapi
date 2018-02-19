@@ -11,7 +11,7 @@ env:
     - OS_TYPE=centos OS_DIST=epel OS_VERSION=7
 
 services:
-  - docker
+    - docker
 
 install: true
 
@@ -19,9 +19,8 @@ script:
   - docker run -v ${PWD}:/sources -v ${PWD}:/output:Z -e "SRPM_ONLY=1" ${DOCKER_IMAGE}:${OS_TYPE}-${OS_VERSION}
 
 
--before_deploy:
+before_deploy:
   - export RELEASE_PKG_FILE=$(ls *.src.rpm)
-  -ls *.src.rpm
   - echo "deploying $RELEASE_PKG_FILE to GitHub releases"
 
 deploy:
@@ -30,5 +29,5 @@ deploy:
    file_glob: true
    file: "$RELEASE_PKG_FILE"
    skip_cleanup: true
-    on:
+   on:
       tags: true
