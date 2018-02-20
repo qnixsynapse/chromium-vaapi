@@ -1,0 +1,31 @@
+--- beta.orig/gpu/config/software_rendering_list.json	2018-02-14 07:34:21.000000000 +0530
++++ beta/gpu/config/software_rendering_list.json	2018-02-20 09:19:53.199823545 +0530
+@@ -53,12 +53,8 @@
+       "vendor_id": "0x1002",
+       "exceptions": [
+         {
+-          "driver_vendor": ".*AMD.*",
+-          "driver_version": {
+-            "op": ">=",
+-            "style": "lexical",
+-            "value": "8.98"
+-          }
++          "driver_vendor": ""
++        
+         },
+         {
+           "driver_vendor": "Mesa",
+@@ -244,10 +240,10 @@
+       "gl_renderer": ".*AMD.*",
+       "exceptions": [
+         {
+-          "driver_vendor": "Mesa",
++          "driver_vendor": "ES",
+           "driver_version": {
+             "op": ">=",
+-            "value": "10.0.4"
++            "value": "2.0"
+           }
+         }
+       ],
+

@@ -1,3 +1,4 @@
+
 # NEVER EVER EVER turn this on in official builds
 %global freeworld 1
 
@@ -115,7 +116,7 @@ BuildRequires:  libicu-devel >= 5.4
 
 Name:		chromium%{chromium_channel}
 Version:	64.0.3282.167
-Release:	1%{?dist}.R
+Release:	%{?dist}.vaapi1
 Epoch:		1
 Summary:	A WebKit (Blink) powered web browser with video acceleration patches(experimental)
 Url:		http://www.chromium.org/Home
@@ -194,7 +195,7 @@ Patch62:	chromium-webrtc-r0.patch
 Patch63:	chromium-63.0.3289.84-nolibc++.patch
 Patch64:	chromium-63.0.3289.84-fix-ft-hb-unbundle.patch
 #Fixed an issue which prevents Amd GPU users from getting Hardware acceleration and fail to find swiftshader library.
-Patch65:	chromium-64.0.3282.167-f172c7c.patch
+Patch65:	amdgpu-fix.patch
 
 ### Russian Fedora Patches ###
 # Clang Gentoo patch: ftp://mirror.yandex.ru/gentoo-portage/www-client/chromium/files/chromium-clang-r2.patch
@@ -214,11 +215,13 @@ Patch505:	chromium-angle-r0.patch
 # Vaapi Patches
 # Ubuntu patch for chromium 64
 # https://raw.githubusercontent.com/saiarcot895/chromium-ubuntu-build/branch-3282/debian/patches/enable_vaapi_on_linux_2.diff
-Patch600:	enable_vaapi_on_linux_2.diff
+Patch600:	chromium_vaapi_move.patch
+Patch601:	chromium-vaapi-r16.patch
+Patch602:	chromium-vaapi-rgbx.patch
 # Allow fallback max resolution for VA to be read from file
 # https://github.com/saiarcot895/chromium-ubuntu-build/pull/16
 # https://raw.githubusercontent.com/saiarcot895/chromium-ubuntu-build/branch-3282/debian/patches/specify-max-resolution.patch
-Patch601:	specify-max-resolution.patch
+
 
 # Use chromium-latest.py to generate clean tarball from released build tarballs, found here:
 # http://build.chromium.org/buildbot/official/
@@ -657,7 +660,7 @@ sed -i 's@audio_processing//@audio_processing/@g' third_party/webrtc/modules/aud
 #%patch62 -p1 -b .webrtc
 %patch63 -p1 -b .nolibc++
 %patch64 -p1 -b .ft-hb
-%patch65 -p1 -b  .f172c7c
+%patch65 -p1 -b  .amdgpu-fix
 
 #%patch52 -p1 -b .fixgccagain
 %patch53 -p1 -b .nogccoptmath
@@ -668,8 +671,10 @@ sed -i 's@audio_processing//@audio_processing/@g' third_party/webrtc/modules/aud
 %patch505 -p1 -b .angle
 
 %if 0%{vaapi}
-%patch600 -p1 -b .vaapi
-%patch601 -p1 -b .specify-max-resolution
+%patch600 -p1 -b .move
+%patch601 -p1 -b .vaapi-init
+%patch602 -p1 -b .rgbx
+
 %endif
 
 %if 0%{?asan}
@@ -1806,58 +1811,43 @@ getent group chrome-remote-desktop >/dev/null || groupadd -r chrome-remote-deskt
 - add basic framework for gn tooling (disabled because it doesn't work yet)
 - update to 53.0.2785.92
 - fix HOME environment issue in chrome-remote-desktop service file
-
 * Mon Aug 29 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.116-11
 - conditionalize Requires: u2f-hidraw-policy so that it is only used on Fedora
 - use bundled harfbuzz on EL7
-
 * Thu Aug 18 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.116-10
 - disable gtk3 because it breaks lots of things
 - re-enable hidpi setting
-
 * Tue Aug 16 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.116-9
 - filter out Requires/Provides for chromium-only libs and plugins
-
 * Tue Aug 16 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.116-8
 - fix path on Requires(post) line for semanage
-
 * Mon Aug 15 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.116-7
 - add Requires(post) items for selinux scriptlets
-
 * Mon Aug 15 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.116-6
 - disable the "hidpi" setting
 - unset MADV_FREE if set (should get F25+ working again)
-
 * Fri Aug 12 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.116-5
 - do not package libwidevinecdm*.so, they are just empty shells
   instead, to enable widevine, get these files from Google Chrome
-
 * Fri Aug 12 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.116-4
 - add "freeworld" conditional for testing netflix/widevine
-
 * Fri Aug 12 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.116-3
 - move PepperFlash directory out of the nacl conditional (thanks to churchyard)
 - fix widevine (thanks to David Vásquez and UnitedRPMS)
-
 * Wed Aug 10 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.116-2
 - include clearkeycdm and widevinecdm files in libs-media
-
 * Mon Aug  8 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.116-1
 - update to 52.0.2743.116
-
 * Thu Aug  4 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.82-13
 - change libs split to "libs-media", as that actually works.
 - add PepperFlash directory (nothing in it though, sorry)
-
 * Wed Aug  3 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.82-12
 - split out libs package beyond ffmpeg, into libs and libs-content
 - fix libusbx conditional for el7 to not nuke libusb headers
 - disable speech-dispatcher header prefix setting if not fedora (el7)
-
 * Wed Aug  3 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.82-11
 - split out chromium-libs-ffmpeg so it can be easily replaced
 - conditionalize opus and libusbx for el7
-
 * Wed Aug  3 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.82-10
 - Add ICU Text Codec aliases (from openSUSE via Russian Fedora)
 - Use PIE in the Linux sandbox (from openSUSE via Russian Fedora)
@@ -1872,108 +1862,77 @@ getent group chrome-remote-desktop >/dev/null || groupadd -r chrome-remote-deskt
 - Set default master_preferences location to /etc/chromium
 - Add master_preferences file as config file
 - Improve chromium-browser.desktop (from Russian Fedora)
-
 * Thu Jul 28 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.82-9
 - fix conditional to disable verbose logging output unless beta/dev
-
 * Thu Jul 28 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.82-8
 - disable nacl/pnacl for Fedora 23 (and older)
-
 * Thu Jul 28 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.82-7
 - fix post scriptlet so that selinux stuff only happens when selinux is enabled
-
 * Thu Jul 28 2016 Richard Hughes <richard@hughsie.com> 52.0.2743.82-6
 - Add an AppData file so that Chromium appears in the software center
-
 * Wed Jul 27 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.82-5
 - enable nacl/pnacl (chromium-native_client has landed in Fedora)
 - fix chromium-browser.sh to report Fedora build target properly
-
 * Wed Jul 27 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.82-4
 - compile with -fno-delete-null-pointer-checks (fixes v8 crashes, nacl/pnacl)
 - turn nacl/pnacl off until chromium-native_client lands in Fedora
-
 * Tue Jul 26 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.82-3
 - turn nacl back on for x86_64
-
 * Thu Jul 21 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.82-2
 - fix cups 2.2 support
 - try to enable widevine compatibility (you still need to get the binary .so files from chrome)
-
 * Thu Jul 21 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.82-1
 - update to 52.0.2743.82
 - handle locales properly
 - cleanup spec
-
 * Tue Jul 19 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.75-1
 - update to 52.0.2743.75
-
 * Wed Jul 6 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2743.60-1
 - bump to 52.0.2743.60, disable nacl for now
-
 * Mon May 9 2016 Tom Callaway <spot@fedoraproject.org> 52.0.2723.2-1
 - force to dev to see if it works better on F24+
-
 * Wed May 4 2016 Tom Callaway <spot@fedoraproject.org> 50.0.2661.94-6
 - apply upstream fix for https://bugs.chromium.org/p/chromium/issues/detail?id=604534
-
 * Tue May 3 2016 Tom Callaway <spot@fedoraproject.org> 50.0.2661.94-5
 - use bundled re2 (conditionalize it)
-
 * Tue May 3 2016 Tom Callaway <spot@fedoraproject.org> 50.0.2661.94-4
 - disable asan (it never quite built)
 - do not preserve re2 bundled tree, causes header/library mismatch
-
 * Mon May 2 2016 Tom Callaway <spot@fedoraproject.org> 50.0.2661.94-3
 - enable AddressSanize (ASan) for debugging
-
 * Sat Apr 30 2016 Tom Callaway <spot@fedoraproject.org> 50.0.2661.94-2
 - use bundled icu always. *sigh*
-
 * Fri Apr 29 2016 Tom Callaway <spot@fedoraproject.org> 50.0.2661.94-1
 - update to 50.0.2661.94
-
 * Wed Apr 27 2016 Tom Callaway <spot@fedoraproject.org> 50.0.2661.86-1
 - update to 50.0.2661.86
-
 * Thu Mar 17 2016 Tom Callaway <spot@fedoraproject.org> 49.0.2623.87-4
 - protect third_party/woff2
-
 * Thu Mar 17 2016 Tom Callaway <spot@fedoraproject.org> 49.0.2623.87-3
 - add BuildRequires: libffi-devel
-
 * Thu Mar 17 2016 Tom Callaway <spot@fedoraproject.org> 49.0.2623.87-2
 - explicitly disable sysroot
-
 * Thu Mar 17 2016 Tom Callaway <spot@fedoraproject.org> 49.0.2623.87-1
 - update to 49.0.2623.87
-
 * Mon Feb 29 2016 Tom Callaway <spot@fedoraproject.org> 48.0.2564.116-3
 - Happy Leap Day!
 - add Requires: u2f-hidraw-policy for u2f token support
 - add Requires: xorg-x11-server-Xvfb for chrome-remote-desktop
-
 * Fri Feb 26 2016 Tom Callaway <spot@fedoraproject.org> 48.0.2564.116-2
 - fix icu BR
-
 * Wed Feb 24 2016 Tom Callaway <spot@fedoraproject.org> 48.0.2564.116-1
 - Update to 48.0.2564.116
 - conditionalize icu properly
 - fix libusbx handling (bz1270324)
-
 * Wed Feb 17 2016 Tom Callaway <spot@fedoraproject.org> 48.0.2564.103-2
 - fixes for gcc6
-
 * Mon Feb  8 2016 Tom Callaway <spot@fedoraproject.org> 48.0.2564.103-1
 - update to 48.0.2564.103
 - use bundled libsrtp (because upstream has coded themselves into an ugly corner)
-
 * Fri Jan 22 2016 Tom Callaway <spot@fedoraproject.org> 48.0.2564.82-1
 - update to 48.0.2564.82
-
 * Fri Jan 15 2016 Tom Callaway <spot@fedoraproject.org> 47.0.2526.111-1
 - update to 47.0.2526.111
-
 * Thu Jan 07 2016 Tomas Popela <tpopela@redhat.com> 47.0.2526.106-2
 - compare hashes when downloading the tarballs
 - Google started to include the Debian sysroots in tarballs - remove them while
@@ -2089,51 +2048,41 @@ getent group chrome-remote-desktop >/dev/null || groupadd -r chrome-remote-deskt
 
 * Tue Jan  6 2015 Tom Callaway <spot@fedoraproject.org> 39.0.2171.95-2
 - rebase off Tomas's spec file for Fedora
-
 * Fri Dec 12 2014 Tomas Popela <tpopela@redhat.com> 39.0.2171.95-1
 - Update to 39.0.2171.95
 - Resolves: rhbz#1173448
-
 * Wed Nov 26 2014 Tomas Popela <tpopela@redhat.com> 39.0.2171.71-1
 - Update to 39.0.2171.71
 - Resolves: rhbz#1168128
-
 * Wed Nov 19 2014 Tomas Popela <tpopela@redhat.com> 39.0.2171.65-2
 - Revert the chrome-sandbox rename to chrome_sandbox
 - Resolves: rhbz#1165653
-
 * Wed Nov 19 2014 Tomas Popela <tpopela@redhat.com> 39.0.2171.65-1
 - Update to 39.0.2171.65
 - Use Red Hat Developer Toolset for compilation
 - Set additional SELinux labels
 - Add more unit tests
 - Resolves: rhbz#1165653
-
 * Fri Nov 14 2014 Tomas Popela <tpopela@redhat.com> 38.0.2125.122-1
 - Update to 38.0.2125.122
 - Resolves: rhbz#1164116
-
 * Wed Oct 29 2014 Tomas Popela <tpopela@redhat.com> 38.0.2125.111-1
 - Update to 38.0.2125.111
 - Resolves: rhbz#1158347
-
 * Fri Oct 24 2014 Tomas Popela <tpopela@redhat.com> 38.0.2125.104-2
 - Fix the situation when the return key (and keys from numpad) does not work
   in HTML elements with input
 - Resolves: rhbz#1153988
 - Dynamically determine the presence of the PepperFlash plugin
 - Resolves: rhbz#1154118
-
 * Thu Oct 16 2014 Tomas Popela <tpopela@redhat.com> 38.0.2125.104-1
 - Update to 38.0.2125.104
 - Resolves: rhbz#1153012
-
 * Thu Oct 09 2014 Tomas Popela <tpopela@redhat.com> 38.0.2125.101-2
 - The boringssl is used for tests, without the possibility of using
   the system openssl instead. Remove the openssl and boringssl sources
   when not building the tests.
 - Resolves: rhbz#1004948
-
 * Wed Oct 08 2014 Tomas Popela <tpopela@redhat.com> 38.0.2125.101-1
 - Update to 38.0.2125.101
 - System openssl is used for tests, otherwise the bundled boringssl is used
@@ -2225,4 +2174,3 @@ getent group chrome-remote-desktop >/dev/null || groupadd -r chrome-remote-deskt
 
 * Mon Sep 9 2013 Tomas Popela <tpopela@redhat.com> 29.0.1547.65-1
 - Initial version based on Tom Callaway's <spot@fedoraproject.org> work
-
