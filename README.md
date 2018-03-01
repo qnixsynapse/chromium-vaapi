@@ -1,0 +1,24 @@
+# Chromium-vaapi
+Chromium browser for Fedora Linux with video acceleration patches.
+Installation Instructions
+THIS IS NOT AN OFFICIAL FEDORA BUILD***
+
+ONLY FOR TESTING
+
+Patches are taken from various sources. I thank them for the contribution.
+
+Chromium browser with hardware video decoding will not only increase the battery by minimising the power consumption but also enable 4k video on weak platforms (If supported).
+
+installing this build requires vaapi driver to be installed in the system. check with vainfo. The hardware video decoding with this patch is still disabled. enable it in chrome://flags/#enable-accelerated-video Check cpu usages in both enabled and disabled state.
+
+AMD GPU provides both vaapi and vdpau.
+If vainfo gives an error try "export LIBVA_DRIVER_NAME=[codename of your amd gpu(radeonsi,etc)without brackets} 
+#AMDGPU users are effected by this bug : https://bugs.chromium.org/p/chromium/issues/detail?id=719213
+
+Nvidia user install libva-vdpau-driver
+
+Intel GPU:libva-intel-driver
+
+This copr build doesn't include proprietary codecs like h264. In order to fully test vaapi capabilities install chromium from Github release tab. 
+This package might cause conflicts with similar packages on the system.
+
