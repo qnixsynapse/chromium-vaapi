@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 # Copyright 2015 Tomas Popela <tpopela@redhat.com>
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -18,14 +18,37 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# This file is obtained from official Chromium packages distributed by Fedora:
+# http://pkgs.fedoraproject.org/cgit/rpms/chromium.git/commit/?id=8a15fdf
+#
+# This script has been modified by Ting-Wei Lan <lantw44@gmail.com> for using
+# in lantw44/chromium Copr repository.
+#
+# List of changes:
+#  * Rename: get_free_ffmpeg_source_files.py -> chromium-ffmpeg-free-sources.py.
+#  * The shebang line no longer hardcodes the path to python2.
+#  * Allow conditions without 'ffmpeg_branding == "Chromium"'.
+#  * Add files included by files named with 'autorename_' prefix.
+#  * Merge changes from the official Fedora package, version 62.0.3202.62.
 
 import sys
+import os
 import re
 
 def append_sources (input_sources, output_sources):
 
   # Get the source files.
   source_files = re.findall(r"\"(.*?)\"", input_sources)
+  for source_file in source_files:
+    source_file_basename = os.path.basename(source_file)
+    if source_file_basename.startswith('autorename_'):
+      possible_include_underscore = source_file_basename[11:]
+      possible_include_underscore_count = possible_include_underscore.count('_')
+      possible_includes = [
+        possible_include_underscore.replace('_', '/', i) for i in range(1,
+        possible_include_underscore_count + 1) ]
+      output_sources += possible_includes
   output_sources += source_files
 
 
@@ -60,7 +83,8 @@ def parse_ffmpeg_gyni_file(gyni_path, arch_not_arm):
         if inserted:
           break
         limitations = ['ffmpeg_branding == "Chrome"', 'ffmpeg_branding == "ChromeOS"']
-        if ('use_linux_config' in condition) and not any(limitation in condition for limitation in limitations):
+        if ('use_linux_config' in condition or 'is_linux' in condition) and \
+          not any(limitation in condition for limitation in limitations):
           if (arch_not_arm):
             if ('x64' in condition) or ('x86' in condition):
               parse_sources (block[1], output_sources, arch_not_arm)
