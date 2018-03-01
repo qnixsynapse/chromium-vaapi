@@ -11,7 +11,7 @@
 ####################################################################################################
 #Global Libraries
 #Do not turn it on in Fedora copr!
-%global freeworld 1
+%global freeworld 0
 ### Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 ### Note: These are for Fedora use ONLY.
 ### For your own distribution, please get your own set of keys.
@@ -717,4 +717,5 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 
 
 %changelog
-
+* Thu Mar 01 2018 Akarshan Biswas <akarshan.biswas@gmail.com> - 64.0.3282.186-101.chromium_vaapi
+- Initial release
