@@ -591,7 +591,8 @@ gn_args+=(
 )
 
 gn_args+=(
-    symbol_level=0
+    symbol_level=1
+    symbol_level=1
 )
 
 ./tools/gn/bootstrap/bootstrap.py --gn-gen-args "${gn_args[*]}"
