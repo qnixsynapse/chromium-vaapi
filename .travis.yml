@@ -15,16 +15,21 @@ services:
 install: true
 
 script:
-  - docker run -v ${PWD}:/sources -v ${PWD}:/output:Z -e "SRPM_ONLY=1" ${DOCKER_IMAGE}:${OS_TYPE}-${OS_VERSION}
+  - docker run -v ${PWD}:/sources -v ${PWD}:/output:Z -e "SRPM_ONLY=1 QUIET=1" ${DOCKER_IMAGE}:${OS_TYPE}-${OS_VERSION}
+
 
 
 before_deploy:
-  - export RELEASE_PKG_FILE=$(ls *.src.rpm)
-  - echo "deploying $RELEASE_PKG_FILE to GitHub releases"
+      # Set up git user name and tag this commit
+      - git config --local user.name "Akarshan Biswas"
+      - git config --local user.email "akarshan.biswas@gmail.com"
+      - git tag "chromium-65.0.3325.146"
+      - export RELEASE_PKG_FILE=$(ls *.src.rpm)
+      - echo "deploying $RELEASE_PKG_FILE to GitHub releases"
 
 deploy:
    provider: releases
-   api_key: "0eda32db03368a3c8dbc18270a5ff74a88afd7f0"
+   api_key: "znk04eKVnRe1xisS6G3ZLA"
    file_glob: true
    file: "$RELEASE_PKG_FILE"
    skip_cleanup: true
