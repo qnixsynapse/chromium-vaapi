@@ -24,7 +24,7 @@ before_deploy:
       - git config --local user.name "Akarshan Biswas"
       - git config --local user.email "akarshan.biswas@gmail.com"
       - git tag "chromium-65.0.3325.146"
-      - export RELEASE_PKG_FILE=$(ls *.src.rpm)
+      - export RELEASE_PKG_FILE=$(ls *.rpm)
       - echo "deploying $RELEASE_PKG_FILE to GitHub releases"
 
 deploy:
