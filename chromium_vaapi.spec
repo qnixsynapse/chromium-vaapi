@@ -127,7 +127,8 @@ Patch1:    commit.patch
 # https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=9b71cea
 # https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=2ad380a
 Patch3:    memcpy.patch
-
+Patch4:    math.patch
+Patch5:    stdin.patch
 #Vaapi Patches from inox-patchset
 #Patch4:    move.patch
 #Patch5:    init.patch
