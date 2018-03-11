@@ -1,35 +1,12 @@
-From 4942f56ceb6d60d6f54ebca8e6eba8ba01c278e8 Mon Sep 17 00:00:00 2001
-From: Tomas Popela <tomas.popela@gmail.com>
-Date: Thu, 7 Dec 2017 22:33:34 +0000
-Subject: [PATCH] memcpy used without including string.h
-
-Compiling Chromium with Clang 4.0.1 and using libstdc++ will fail on using
-memcpy without including string.h.
-
-Cq-Include-Trybots: master.tryserver.blink:linux_trusty_blink_rel;master.tryserver.chromium.android:android_optional_gpu_tests_rel
-Change-Id: Idced1d5de3baf6b520d4a2d61774120642ead1a8
-Reviewed-on: https://chromium-review.googlesource.com/813737
-Reviewed-by: Thomas Anderson <thomasanderson@chromium.org>
-Reviewed-by: vmpstr <vmpstr@chromium.org>
-Commit-Queue: Thomas Anderson <thomasanderson@chromium.org>
-Cr-Commit-Position: refs/heads/master@{#522579}
----
- cc/paint/raw_memory_transfer_cache_entry.cc | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/cc/paint/raw_memory_transfer_cache_entry.cc b/cc/paint/raw_memory_transfer_cache_entry.cc
-index 9e4660c685ee..95ad50b1a338 100644
---- a/cc/paint/raw_memory_transfer_cache_entry.cc
-+++ b/cc/paint/raw_memory_transfer_cache_entry.cc
-@@ -4,6 +4,8 @@
+diff -up chromium-65.0.3325.146/cc/paint/raw_memory_transfer_cache_entry.cc.memcpyfix chromium-65.0.3325.146/cc/paint/raw_memory_transfer_cache_entry.cc
+--- chromium-65.0.3325.146/cc/paint/raw_memory_transfer_cache_entry.cc.memcpyfix	2018-03-07 11:04:14.690379817 -0500
++++ chromium-65.0.3325.146/cc/paint/raw_memory_transfer_cache_entry.cc	2018-03-07 11:06:04.339878069 -0500
+@@ -3,7 +3,7 @@
+ // found in the LICENSE file.
  
  #include "cc/paint/raw_memory_transfer_cache_entry.h"
+-
++#include <memory.h>
+ #include <string.h>
  
-+#include <string.h>
-+
  namespace cc {
- 
- ClientRawMemoryTransferCacheEntry::ClientRawMemoryTransferCacheEntry(
--- 
-2.15.1
-
