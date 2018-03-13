@@ -738,3 +738,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %{chromiumdir}/locales/*.pak
 %license LICENSE
 %doc AUTHORS
+####################################################################
+%changelog
+* Wed Mar 07 2018 Akarshan Biswas <akarshan.biswas@gmail.com> - 65.0.3325.146-102.chromium_vaapi
+- Updated to 65.0.3325.146
+
+* Thu Mar 01 2018 Akarshan Biswas <akarshan.biswas@gmail.com> - 64.0.3282.186-101.chromium_vaapi
+- Initial release
