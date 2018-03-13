@@ -5,7 +5,7 @@
 # found in the LICENSE file.
 
 # This file is obtained from https://src.fedoraproject.org/rpms/chromium/
-# and modified by Ting-Wei Lan <lantw44@gmail.com>. All modifications are also
+# and modified by Ting-Wei Lan <lantw44@gmail.com>, also modified by Akarshan Biswas <akarshan.biswas@gmail.com. All modifications are also
 # licensed under 3-clause BSD license.
 
 # Let the wrapped binary know that it has been run through the wrapper.
@@ -23,6 +23,8 @@ CHROMIUM_DISTRO_FLAGS=" --enable-plugins \
                         --enable-extensions \
                         --enable-user-scripts \
                         --enable-printing \
+		                  	--enable-features=ParallelDownloading \
+		                  	--enable-accelerated-video \
                         --enable-sync"
 
 exec -a "$0" "@@CHROMIUMDIR@@/$(basename "$0" | sed 's/\.sh$//')" $CHROMIUM_DISTRO_FLAGS "$@"
