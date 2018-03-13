@@ -23,8 +23,8 @@ CHROMIUM_DISTRO_FLAGS=" --enable-plugins \
                         --enable-extensions \
                         --enable-user-scripts \
                         --enable-printing \
-		                  	--enable-features=ParallelDownloading \
-		                  	--enable-accelerated-video \
+		        --enable-features=ParallelDownloading \
+		        --enable-accelerated-video \
                         --enable-sync"
 
 exec -a "$0" "@@CHROMIUMDIR@@/$(basename "$0" | sed 's/\.sh$//')" $CHROMIUM_DISTRO_FLAGS "$@"
