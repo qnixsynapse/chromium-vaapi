@@ -12,6 +12,7 @@
 #Global Libraries
 #Do not turn it on in Fedora copr!
 %global freeworld 1
+%global obs 0
 ### Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 ### Note: These are for Fedora use ONLY.
 ### For your own distribution, please get your own set of keys.
@@ -60,7 +61,8 @@
 
 # Allow building with symbols to ease debugging
 # Enabled by default because Fedora Copr has enough memory
-%bcond_without symbol
+#Disabled by default in OBS because it has less memory
+%bcond_with symbol
 
 # Allow compiling with clang
 # Disabled by default becaue gcc is the system compiler
@@ -92,7 +94,6 @@ URL:        https://www.chromium.org/Home
 #
 # If you don't use Fedora services, you can uncomment the following line and
 # use the upstream source tarball instead of the repackaged one.
-# Source0:    https://commondatastorage.googleapis.com/chromium-browser-official/chromium-%{version}.tar.xz
 #
 # The repackaged source tarball used here is produced by:
 # ./chromium-latest.py --stable --ffmpegclean --ffmpegarm
@@ -122,11 +123,28 @@ Patch1:    commit.patch
 # Add a patch from Gentoo to fix ANGLE build
 # https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=1a8dd9f
 #Patch2:    angle.patch
+#Gcc patches from gentoo
+Patch8:		gcc71.patch
+Patch9:		gcc72.patch
+Patch10:	gcc73.patch
+Patch11:	gcc74.patch
+Patch12:	gcc75.patch
+Patch13:	gcc76.patch
+Patch14:	gcc77.patch
+Patch15:	gcc78.patch
+Patch16:	gcc79.patch
+Patch17:	gcc710.patch
+Patch18:	gcc711.patch
+Patch19:	gcc712.patch
+Patch20:	gcc713.patch
+Patch21:	gcc714.patch
+Patch22:	gcc715.patch
+
 
 # Add a patch from Gentoo to fix compositor build
 # https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=9b71cea
 # https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=2ad380a
-Patch3:    memcpy.patch
+#Patch3:    memcpy.patch
 Patch4:    math.patch
 Patch5:    stdin.patch
 #Vaapi Patches from inox-patchset
@@ -137,8 +155,6 @@ Patch5:    stdin.patch
 Patch6:    init.patch
 Patch7:    vaapi.patch
 
-
-# trying it on 32 bit as well(not considering arm/arm64)
 ExclusiveArch: x86_64 
 
 # Make sure we don't encounter GCC 5.1 bug
@@ -152,7 +168,7 @@ BuildRequires: clang, llvm
 %endif
 # Basic tools and libraries
 BuildRequires: ninja-build, nodejs, bison, gperf, hwdata
-BuildRequires: libgcc(x86-32), glibc(x86-32), libatomic
+BuildRequires: libgcc, glibc, libatomic
 BuildRequires: libcap-devel, cups-devel, minizip-devel, alsa-lib-devel
 BuildRequires: mesa-libGL-devel, mesa-libEGL-devel
 BuildRequires: pkgconfig(gtk+-2.0), pkgconfig(gtk+-3.0)
@@ -388,6 +404,7 @@ Chromium is an open-source web browser, powered by WebKit (Blink).
     third_party/khronos \
     third_party/leveldatabase \
     third_party/libaddressinput \
+    third_party/libaom \
     third_party/libjingle \
     third_party/libphonenumber \
     third_party/libsecret \
@@ -413,7 +430,9 @@ Chromium is an open-source web browser, powered by WebKit (Blink).
     third_party/mt19937ar \
     third_party/node \
     third_party/node/node_modules/polymer-bundler/lib/third_party/UglifyJS2 \
+    %if %{freeworld}
     third_party/openh264 \
+    %endif
     third_party/openmax_dl \
     third_party/ots \
     third_party/pdfium \
@@ -433,6 +452,7 @@ Chromium is an open-source web browser, powered by WebKit (Blink).
     third_party/protobuf \
     third_party/protobuf/third_party/six \
     third_party/qcms \
+    third_party/s2cellid \
     third_party/sfntly \
     third_party/skia \
     third_party/skia/third_party/gif \
@@ -461,9 +481,8 @@ Chromium is an open-source web browser, powered by WebKit (Blink).
     third_party/zlib/google \
     url/third_party/mozilla \
     v8/src/third_party/valgrind \
-    v8/third_party/inspector_protocol \
-    third_party/s2cellid \
-    v8/src/third_party/utf8-decoder
+    v8/src/third_party/utf8-decoder \
+    v8/third_party/inspector_protocol
 
 ./build/linux/unbundle/replace_gn_files.py --system-libraries \
     flac \
@@ -489,8 +508,7 @@ Chromium is an open-source web browser, powered by WebKit (Blink).
     yasm \
     zlib
 
-./build/download_nacl_toolchains.py --packages \
-    nacl_x86_glibc,nacl_x86_newlib,pnacl_newlib,pnacl_translator sync --extract
+
 
 sed -i 's|//third_party/usb_ids|/usr/share/hwdata|g' device/usb/BUILD.gn
 
@@ -536,12 +554,29 @@ export LDFLAGS='%{__global_ldflags}'
 export CC=clang CXX=clang++
 %else
 export CC=gcc CXX=g++
-export CXXFLAGS="$CXXFLAGS -fno-delete-null-pointer-checks"
+export CXXFLAGS="$CXXFLAGS -fno-delete-null-pointer-checks -fpermissive"
 %endif
 
+%if %{obs}
+# do not eat all memory on obs
+ninjaproc="%{?jobs:%{jobs}}"
+echo "Available memory:"
+cat /proc/meminfo
+echo "System limits:"
+ulimit -a
+if test -n "$ninjaproc" -a "$ninjaproc" -gt 1 ; then
+    mem_per_process=1600000
+    max_mem=$(awk '/MemTotal/ { print $2 }' /proc/meminfo)
+    max_jobs="$(($max_mem / $mem_per_process))"
+    test "$ninjaproc" -gt "$max_jobs" && ninjaproc="$max_jobs" && echo "Warning: Reducing number of jobs to $max_jobs because of memory limits"
+    test "$ninjaproc" -le 0 && ninjaproc=1 && echo "Warning: Do not use the parallel build at all becuse of memory limits"
+fi
+%endif
 gn_args=(
     is_debug=false
     use_vaapi=true
+#Turning off this nasty specimen until it gets fixed upstream for AMD GPU users
+    enable_swiftshader=false
     is_component_build=false
     use_sysroot=false
     use_custom_libcxx=false
@@ -550,8 +585,8 @@ gn_args=(
     'system_libdir="lib64"'
 %endif
     use_cups=true
-    use_gconf=false
-    use_gnome_keyring=true
+#I really don't think it's needed. Especially for people who has got auto login enabled in their linux desktops.
+    use_gnome_keyring=false
     use_gio=true
     use_kerberos=true
     use_libpci=true
@@ -569,13 +604,13 @@ gn_args=(
     proprietary_codecs=false
     enable_hangout_services_extension=false
 %endif
-    enable_nacl=true
+    enable_nacl=false
+    enable_pnacl = false
     enable_webrtc=true
     fatal_linker_warnings=false
     treat_warnings_as_errors=false
     linux_use_bundled_binutils=false
     fieldtrial_testing_like_official_build=true
-    'system_libdir="%{_lib}"'
     'custom_toolchain="//build/toolchain/linux/unbundle:default"'
     'host_toolchain="//build/toolchain/linux/unbundle:default"'
     'google_api_key="%{api_key}"'
@@ -608,25 +643,16 @@ gn_args+=(
 
 ./tools/gn/bootstrap/bootstrap.py --gn-gen-args "${gn_args[*]}"
 ./out/Release/gn gen out/Release --args="${gn_args[*]}"
-%if %{freeworld}
-
-%if 0%{?ninja_build:1}
-%{ninja_build} -C out/Release media chrome chrome_sandbox chromedriver
+%if %{obs}
+ninja -v -j $ninjaproc -C out/Release chrome chrome_sandbox chromedriver widevinecdmadapter
 %else
-ninja -v %{_smp_mflags} -C out/Release media chrome chrome_sandbox chromedriver
+ninja -v  %{_smp_mflags} -C out/Release chrome chrome_sandbox chromedriver widevinecdmadapter
 %endif
-%else
-%if 0%{?ninja_build:1}
-%{ninja_build} -C out/Release chrome chrome_sandbox chromedriver
-%else
-ninja -v %{_smp_mflags} -C out/Release chrome chrome_sandbox chromedriver
-%endif
-%endif
-#-----------------------------------------------------------------------------
+##################################################################################################################################
 %install
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{chromiumdir}/locales
-mkdir -p %{buildroot}%{chromiumdir}/swiftshader
+#mkdir -p %{buildroot}%{chromiumdir}/swiftshader
 mkdir -p %{buildroot}%{_mandir}/man1
 mkdir -p %{buildroot}%{_datadir}/appdata
 mkdir -p %{buildroot}%{_datadir}/applications
@@ -647,16 +673,10 @@ install -m 755 out/Release/chromedriver %{buildroot}%{chromiumdir}/
 %if !%{with system_libicu}
 install -m 644 out/Release/icudtl.dat %{buildroot}%{chromiumdir}/
 %endif
-#Media releated stuff. IDK why he left it. :(
 install -m 755 out/Release/lib*.so* %{buildroot}%{chromiumdir}/
-install -m 755 out/Release/nacl_helper %{buildroot}%{chromiumdir}/
-install -m 755 out/Release/nacl_helper_bootstrap %{buildroot}%{chromiumdir}/
-install -m 644 out/Release/nacl_irt_x86_64.nexe %{buildroot}%{chromiumdir}/
-install -m 644 out/Release/natives_blob.bin %{buildroot}%{chromiumdir}/
-install -m 644 out/Release/snapshot_blob.bin %{buildroot}%{chromiumdir}/
+install -m 644 out/Release/*.bin %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/*.pak %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/locales/*.pak %{buildroot}%{chromiumdir}/locales/
-install -m 755 out/Release/swiftshader/*.so %{buildroot}%{chromiumdir}/swiftshader/
 for i in 16 32; do
     mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
     install -m 644 chrome/app/theme/default_100_percent/chromium/product_logo_$i.png \
@@ -710,24 +730,11 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %if !%{with system_libicu}
 %{chromiumdir}/icudtl.dat
 %endif
-%{chromiumdir}/nacl_helper
-%{chromiumdir}/nacl_helper_bootstrap
-%{chromiumdir}/nacl_irt_x86_64.nexe
-%{chromiumdir}/natives_blob.bin
-%{chromiumdir}/snapshot_blob.bin
+%{chromiumdir}/*.bin
 %{chromiumdir}/*.pak
 %{chromiumdir}/lib*.so*
 %{chromiumdir}/lib*.so*
 %dir %{chromiumdir}/locales
 %{chromiumdir}/locales/*.pak
-%dir %{chromiumdir}/swiftshader
-%{chromiumdir}/swiftshader/libEGL.so
-%{chromiumdir}/swiftshader/libGLESv2.so
 %license LICENSE
 %doc AUTHORS
-
-
-
-%changelog
-* Thu Mar 01 2018 Akarshan Biswas <akarshan.biswas@gmail.com> - 64.0.3282.186-101.chromium_vaapi
-- Initial release
