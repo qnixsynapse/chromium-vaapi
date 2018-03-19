@@ -11,7 +11,7 @@
 ####################################################################################################
 #Global Libraries
 #Do not turn it on in Fedora copr!
-%global freeworld 1
+%global freeworld 0
 %global obs 0
 ### Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 ### Note: These are for Fedora use ONLY.
@@ -77,7 +77,7 @@
 %bcond_with fedora_compilation_flags
 
 Name:       chromium
-Version:    65.0.3325.146
+Version:    65.0.3325.162
 Release:    101%{?dist}.chromium_vaapi
 Summary:    A WebKit (Blink) powered web browser with video acceleration
 
