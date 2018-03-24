@@ -11,8 +11,7 @@
 ####################################################################################################
 #Global Libraries
 #Do not turn it on in Fedora copr!
-%global freeworld 0
-%global obs 0
+%global freeworld 1
 ### Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 ### Note: These are for Fedora use ONLY.
 ### For your own distribution, please get your own set of keys.
@@ -62,7 +61,7 @@
 # Allow building with symbols to ease debugging
 # Enabled by default because Fedora Copr has enough memory
 #Disabled by default in OBS because it has less memory
-%bcond_with symbol
+%bcond_without symbol
 
 # Allow compiling with clang
 # Disabled by default becaue gcc is the system compiler
@@ -77,7 +76,7 @@
 %bcond_with fedora_compilation_flags
 
 Name:       chromium
-Version:    65.0.3325.162
+Version:    65.0.3325.181
 Release:    101%{?dist}.chromium_vaapi
 Summary:    A WebKit (Blink) powered web browser with video acceleration
 
@@ -556,9 +555,7 @@ export CC=clang CXX=clang++
 export CC=gcc CXX=g++
 export CXXFLAGS="$CXXFLAGS -fno-delete-null-pointer-checks -fpermissive"
 %endif
-
-%if %{obs}
-# do not eat all memory on obs
+# do not eat all memory
 ninjaproc="%{?jobs:%{jobs}}"
 echo "Available memory:"
 cat /proc/meminfo
@@ -571,11 +568,10 @@ if test -n "$ninjaproc" -a "$ninjaproc" -gt 1 ; then
     test "$ninjaproc" -gt "$max_jobs" && ninjaproc="$max_jobs" && echo "Warning: Reducing number of jobs to $max_jobs because of memory limits"
     test "$ninjaproc" -le 0 && ninjaproc=1 && echo "Warning: Do not use the parallel build at all becuse of memory limits"
 fi
-%endif
+
 gn_args=(
     is_debug=false
     use_vaapi=true
-#Turning off this nasty specimen until it gets fixed upstream for AMD GPU users
     enable_swiftshader=false
     is_component_build=false
     use_sysroot=false
@@ -585,7 +581,7 @@ gn_args=(
     'system_libdir="lib64"'
 %endif
     use_cups=true
-#I really don't think it's needed. Especially for people who has got auto login enabled in their linux desktops.
+    use_gconf=false
     use_gnome_keyring=false
     use_gio=true
     use_kerberos=true
@@ -605,7 +601,6 @@ gn_args=(
     enable_hangout_services_extension=false
 %endif
     enable_nacl=false
-    enable_pnacl = false
     enable_webrtc=true
     fatal_linker_warnings=false
     treat_warnings_as_errors=false
@@ -643,12 +638,9 @@ gn_args+=(
 
 ./tools/gn/bootstrap/bootstrap.py --gn-gen-args "${gn_args[*]}"
 ./out/Release/gn gen out/Release --args="${gn_args[*]}"
-%if %{obs}
 ninja -v -j $ninjaproc -C out/Release chrome chrome_sandbox chromedriver widevinecdmadapter
-%else
-ninja -v  %{_smp_mflags} -C out/Release chrome chrome_sandbox chromedriver widevinecdmadapter
-%endif
-##################################################################################################################################
+
+#-----------------------------------------------------------------------------
 %install
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{chromiumdir}/locales
@@ -735,15 +727,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %{chromiumdir}/snapshot_blob.bin
 %{chromiumdir}/*.pak
 %{chromiumdir}/lib*.so*
-%{chromiumdir}/lib*.so*
 %dir %{chromiumdir}/locales
 %{chromiumdir}/locales/*.pak
 %license LICENSE
 %doc AUTHORS
-####################################################################
-%changelog
-* Wed Mar 07 2018 Akarshan Biswas <akarshan.biswas@gmail.com> - 65.0.3325.146-102.chromium_vaapi
-- Updated to 65.0.3325.146
-
-* Thu Mar 01 2018 Akarshan Biswas <akarshan.biswas@gmail.com> - 64.0.3282.186-101.chromium_vaapi
-- Initial release
