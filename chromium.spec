@@ -4,14 +4,15 @@
 #  [3] https://www.archlinux.org/packages/extra/x86_64/chromium/
 #  [4] https://src.fedoraproject.org/rpms/chromium/
 #  [5] https://gitweb.gentoo.org/repo/gentoo.git/tree/www-client/chromium/
-
+#  [6] https://copr.fedorainfracloud.org/coprs/lantw44/chromium/
 # Get the version number of latest stable version
 # $ curl -s 'https://omahaproxy.appspot.com/all?os=linux&channel=stable' | sed 1d | cut -d , -f 3
 ######################################################################################################################
 ####################################################################################################
 #Global Libraries
-#Do not turn it on in Fedora copr!
-%global freeworld 1
+#Do not turn these on in Fedora copr!
+%global obs 0
+%global freeworld 0
 ### Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 ### Note: These are for Fedora use ONLY.
 ### For your own distribution, please get your own set of keys.
@@ -20,10 +21,7 @@
 %global default_client_id 449907151817.apps.googleusercontent.com
 %global default_client_secret miEreAep8nuvTdvLums6qyLK
 %global chromiumdir %{_libdir}/chromium-browser
-%global __provides_exclude_from %{chromium_path}/.*\\.so|%{chromium_path}/lib/.*\\.so
-%global __provides_exclude_from %{chromium_path}/.*\\.so|%{chromium_path}/lib/.*\\.so
-%global privlibs libaccessibility|libaura_extra|libaura|libbase_i18n|libbase|libblink_common|libblink_core|libblink_modules|libblink_platform|libblink_web|libbluetooth|libboringssl|libbrowser_ui_views|libcaptive_portal|libcapture|libcc_blink|libcc_ipc|libcc_proto|libcc|libcc_surfaces|libchromium_sqlite3|libcloud_policy_proto_generated_compile|libcloud_policy_proto|libcommon|libcompositor|libcontent|libcrcrypto|libdbus|libdevice_battery|libdevice_core|libdevice_event_log|libdevice_gamepad|libdevice_geolocation|libdevices|libdevice_vibration|libdisplay_compositor|libdisplay|libdisplay_types|libdisplay_util|libdomain_reliability|libEGL|libevents_base|libevents_devices_x11|libevents_ipc|libevents_ozone_layout|libevents|libevents_x|libffmpeg|libfont_service_library|libgcm|libgeometry|libgesture_detection|libgfx_ipc_color|libgfx_ipc_geometry|libgfx_ipc_skia|libgfx_ipc|libgfx|libgfx_x11|libgin|libgles2_c_lib|libgles2_implementation|libgles2_utils|libGLESv2|libgl_init|libgl_wrapper|libgpu|libgtk2ui|libicui18n|libicuuc|libipc|libkeyboard|libkeyboard_with_content|libkeycodes_x11|libkeyed_service_content|libkeyed_service_core|libmedia_blink|libmedia_gpu|libmedia|libmemory_coordinator_browser|libmemory_coordinator_child|libmemory_coordinator_common|libmessage_center|libmidi|libmojo_blink_lib|libmojo_common_lib|libmojo_ime_lib|libmojo_public_system|libmojo_system_impl|libnative_theme|libnet|libnet_with_v8|libonc|libplatform|libpolicy_component|libpolicy_proto|libpower_save_blocker|libppapi_host|libppapi_proxy|libppapi_shared|libprefs|libprinting|libprotobuf_lite|libproxy_config|librange|libsandbox_services|libseccomp_bpf|libsessions|libshared_memory_support|libshell_dialogs|libskia|libsnapshot|libsql|libstartup_tracing|libstorage_browser|libstorage_common|libstub_window|libsuid_sandbox_client|libsurface|libtracing|libtranslator|libui_base_ime|libui_base|libui_base_x|libui_data_pack|libui_library|libui_touch_selection|libui_views_mus_lib|liburl_ipc|liburl_matcher|liburl|libuser_prefs|libv8|libviews|libwebdata_common|libweb_dialogs|libwebview|libwidevinecdm|libwm|libwtf|libx11_events_platform|libx11_window|libbindings|libgeolocation|libmojo_public_system_cpp|libtime_zone_monitor|libdevice_base|libcc_animation|libcpp|libdevice_base|libdiscardable_memory_client|libdiscardable_memory_common|libdiscardable_memory_service|libgeneric_sensor|libgl_in_process_context|libjs|libpower_monitor|libv8_libbase|libsensors|libdevice_vr|libcc_paint|libgtk3ui|libcapture_base|libcapture_lib|libfingerprint|libanimation|libcc_base|libcc_debug|libcodec|libcolor_space|libembedder|libgeometry_skia|libgin_features|libmedia_mojo_services|libplatform_wtf|libprotobuf_globals|libcdm_manager|libframe_sinks|libresource_coordinator_cpp|libblink_android_mojo_bindings_shared|libblink_mojo_bindings_shared|libblink_mojo_bindings_shared|libblink_offscreen_canvas_mojo_bindings_shared|libcontent_common_mojo_bindings_shared|libdevice_vr_mojo_bindings|libdevice_vr_mojo_bindings_blink|libdevice_vr_mojo_bindings_shared|libgeneric_sensor_public_interfaces_shared|libheadless|libipc_mojom|libipc_mojom_shared|libpublic|libresource_coordinator_public_interfaces_internal_shared|libservice_manager_cpp|libservice_manager_cpp_types|libservice_manager_mojom|libservice_manager_mojom_constants|libservice_manager_mojom_constants_shared|libservice_manager_mojom_shared|libgfx_switches|libmetrics_cpp|libui_devtools|libviz_common|libwm_public|libblink_controller|libcontent_public_common_mojo_bindings_shared|libgfx_switches|libhost|libinterfaces_shared|libmetrics_cpp|libservice|libviz_common|libwm_public|libviz_resource_format|libembedder_switches|libfreetype_harfbuzz|libmessage_support|libsandbox|libclient|libleveldatabase|libblink_core_mojo_bindings_shared|libgpu_util|libmedia_devices_mojo_bindings_shared|libmojo_platform_bindings_shared|libmojo_bindings_shared|libcbor|libcrash_key|libdevice_features|libgfx_ipc_buffer_types|libgles2|libgpu_ipc_service|libmojo_base_lib|libmojo_base_mojom_shared|libmojo_base_shared_typemap_traits|libnetwork_session_configurator|libresource_coordinator_cpp_base|libresource_coordinator_public_interfaces|libresource_coordinator_public_interfaces_blink|libresource_coordinator_public_interfaces_shared
-%global __requires_exclude ^(%{privlibs})\\.so
+%global __provides_exclude_from ^%{chromiumdir}/.*$
 ########################################################################################################################
 %if 0%{?fedora} < 26
 %bcond_without system_jinja2
@@ -46,7 +44,7 @@
 %endif
 
 # Require harfbuzz >= 1.5.0 for hb_glyph_info_t
-%if 0%{?fedora} >= 28
+%if 0%{?fedora} >= 27
 %bcond_without system_harfbuzz
 %else
 %bcond_with system_harfbuzz
@@ -76,8 +74,8 @@
 %bcond_with fedora_compilation_flags
 
 Name:       chromium
-Version:    65.0.3325.181
-Release:    101%{?dist}.chromium_vaapi
+Version:    66.0.3359.117
+Release:    106%{?dist}.chromium_vaapi
 Summary:    A WebKit (Blink) powered web browser with video acceleration
 
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
@@ -118,43 +116,50 @@ Source13:   chromium-browser.appdata.xml
 # Add a patch from Fedora to fix GN build
 # https://src.fedoraproject.org/cgit/rpms/chromium.git/commit/?id=0df9641
 Patch1:    commit.patch
+Patch2:    widevine.patch
 
 # Add a patch from Gentoo to fix ANGLE build
 # https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=1a8dd9f
 #Patch2:    angle.patch
 #Gcc patches from gentoo
-Patch8:		gcc71.patch
-Patch9:		gcc72.patch
-Patch10:	gcc73.patch
-Patch11:	gcc74.patch
-Patch12:	gcc75.patch
-Patch13:	gcc76.patch
-Patch14:	gcc77.patch
-Patch15:	gcc78.patch
-Patch16:	gcc79.patch
-Patch17:	gcc710.patch
-Patch18:	gcc711.patch
-Patch19:	gcc712.patch
-Patch20:	gcc713.patch
-Patch21:	gcc714.patch
-Patch22:	gcc715.patch
+#Patch8:		gcc71.patch
+#Patch9:		gcc72.patch
+#Patch10:	gcc73.patch
+#Patch11:	gcc74.patch
+#Patch12:	gcc75.patch
+#Patch13:	gcc76.patch
+#Patch14:	gcc77.patch
+#Patch15:	gcc78.patch
+#Patch16:	gcc79.patch
+#Patch17:	gcc710.patch
+#Patch18:	gcc711.patch
+#Patch19:	gcc712.patch
+#Patch20:	gcc713.patch
+#Patch21:	gcc714.patch
+#Patch22:	gcc715.patch
 
 
 # Add a patch from Gentoo to fix compositor build
 # https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=9b71cea
 # https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=2ad380a
 #Patch3:    memcpy.patch
-Patch4:    math.patch
-Patch5:    stdin.patch
+#Patch3:    icu.patch
+Patch10:    osxgtkthemepatch.patch
+#Patch6:    skia.patch
 #Vaapi Patches from inox-patchset
 #Patch4:    move.patch
 #Patch5:    init.patch
 #Patch6:    2ndstep.patch
 #Patch7:    rgbx.patch
-Patch6:    init.patch
-Patch7:    vaapi.patch
+#Patch6:    init.patch
+Patch11:    blinktools.patch
+Patch12:    gcc7-r540828.patch
+Patch13:    gcc7-r541029.patch
+Patch14:    gcc7-r541827.patch
+Patch15:    unrar.patch
+#Video acceleration patch from https://chromium-review.googlesource.com/c/chromium/src/+/532294
+Patch100:    vaapi.patch
 
-ExclusiveArch: x86_64 
 
 # Make sure we don't encounter GCC 5.1 bug
 %if 0%{?fedora} >= 22
@@ -225,14 +230,16 @@ BuildRequires: zlib-devel
 BuildRequires: pciutils-devel
 BuildRequires: speech-dispatcher-devel
 BuildRequires: pulseaudio-libs-devel
-# install desktop files
-BuildRequires: desktop-file-utils
 # install AppData files
 BuildRequires: libappstream-glib
 #for vaapi
 BuildRequires:	libva-devel
+#------------------------------------------------------------------------------------------
 Requires(post):   desktop-file-utils
 Requires(postun): desktop-file-utils
+# For selinux scriptlet
+Requires(post): /usr/sbin/semanage
+Requires(post): /usr/sbin/restorecon
 Requires:         hicolor-icon-theme
 Requires:	libva
 Obsoletes:     chromedriver <= %{version}-%{release}
@@ -240,78 +247,7 @@ Obsoletes:     chromium-common <= %{version}-%{release}
 Obsoletes:     chromium-headless <= %{version}-%{release}
 Obsoletes:     chromium-libs <= %{version}-%{release}
 Obsoletes:     chromium-libs-media <= %{version}-%{release}
-Provides: bundled(angle) = 2422
-Provides: bundled(bintrees) = 1.0.1
-# This is a fork of openssl.
-Provides: bundled(boringssl)
-Provides: bundled(brotli) = 222564a95d9ab58865a096b8d9f7324ea5f2e03e
-Provides: bundled(bspatch)
-Provides: bundled(cacheinvalidation) = 20150720
-Provides: bundled(colorama) = 799604a104
-Provides: bundled(crashpad)
-Provides: bundled(dmg_fp)
-Provides: bundled(libGLESv2.so()(64bit))
-Provides: bundled(expat) = 2.2.0
-Provides: bundled(fdmlibm) = 5.3
-# Don't get too excited. MPEG and other legally problematic stuff is stripped out.
-Provides: bundled(ffmpeg) = 3.2git
-Provides: bundled(fips181) = 2.2.3
-Provides: bundled(fontconfig) = 2.11.0
-Provides: bundled(gperftools) = svn144
-Provides: bundled(harfbuzz) = 1.4.2
-Provides: bundled(hunspell) = 1.6.0
-Provides: bundled(iccjpeg)
-Provides: bundled(icu) = 58.1
-Provides: bundled(kitchensink) = 1
-Provides: bundled(leveldb) = 1.20
-Provides: bundled(libaddressinput) = 0
-Provides: bundled(libdrm) = 2.4.70
-Provides: bundled(libevent) = 1.4.15
-Provides: bundled(libjingle) = 9564
-Provides: bundled(libjpeg-turbo) = 1.4.90
-Provides: bundled(libphonenumber) = a4da30df63a097d67e3c429ead6790ad91d36cf4
-Provides: bundled(libpng) = 1.6.22
-Provides: bundled(libsrtp) = 1.5.2
-Provides: bundled(libusbx) = 1.0.17
-Provides: bundled(libvpx) = 1.6.0
-Provides: bundled(libwebp) = 0.6.0
-# Well, it's actually newer than 2.9.4 and has code in it that has been reverted upstream... but eh.
-Provides: bundled(libxml) = 2.9.4
-Provides: bundled(libXNVCtrl) = 302.17
-Provides: bundled(libyuv) = 1651
-Provides: bundled(lzma) = 15.14
-Provides: bundled(libudis86) = 1.7.1
-Provides: bundled(mesa) = 9.0.3
-Provides: bundled(NSBezierPath) = 1.0
-Provides: bundled(mozc)
-Provides: bundled(mt19937ar) = 2002.1.26
-Provides: bundled(opus) = 1.1.3
-Provides: bundled(ots) = 8d70cffebbfa58f67a5c3ed0e9bc84dccdbc5bc0
-Provides: bundled(protobuf) = 3.0.0.beta.3
-Provides: bundled(qcms) = 4
-Provides: bundled(re2)
-Provides: bundled(sfntly) = 04740d2600193b14aa3ef24cd9fbb3d5996b9f77
-Provides: bundled(skia)
-Provides: bundled(SMHasher) = 0
-Provides: bundled(snappy) = 1.1.4-head
-Provides: bundled(speech-dispatcher) = 0.7.1
-Provides: bundled(sqlite) = 3.17patched
-Provides: bundled(superfasthash) = 0
-Provides: bundled(talloc) = 2.0.1
-Provides: bundled(usrsctp) = 0
-Provides: bundled(v8) = 5.9.211.31
-Provides: bundled(webrtc) = 90usrsctp
-Provides: bundled(woff2) = 445f541996fe8376f3976d35692fd2b9a6eedf2d
-Provides: bundled(xdg-mime)
-Provides: bundled(xdg-user-dirs)
-Provides: bundled(x86inc) = 0
-Provides:	chromium-ffmpegsumo = %{version}-%{release}
-Obsoletes:	chromium-ffmpegsumo <= 35.0.1916.114
-Provides:	chromium-v8 = %{version}-%{release}
-Obsoletes:	chromium-v8 <= 3.25.28.18
-# This is a lie. webrtc never had any real version. 0.2 is greater than 0.1
-Provides:	webrtc = 0.2
-Obsoletes:	webrtc <= 0.1
+
 Provides:      chromedriver = %{version}-%{release}
 Provides:      chromium-common = %{version}-%{release}
 Provides:      chromium-headless = %{version}-%{release}
@@ -322,6 +258,9 @@ Provides:      chromedriver-stable = %{version}-%{release}
 Conflicts:     chromedriver-testing
 Conflicts:     chromedriver-unstable
 
+%if !%{with symbol}
+%global debug_package %{nil}
+%endif
 
 %description
 Chromium is an open-source web browser, powered by WebKit (Blink).
@@ -340,6 +279,8 @@ Chromium is an open-source web browser, powered by WebKit (Blink).
     base/third_party/valgrind \
     base/third_party/xdg_mime \
     base/third_party/xdg_user_dirs \
+    buildtools/third_party/libc++ \
+    buildtools/third_party/libc++abi \
     chrome/third_party/mozilla_security_manager \
     courgette/third_party \
     native_client/src/third_party/dlmalloc \
@@ -354,6 +295,10 @@ Chromium is an open-source web browser, powered by WebKit (Blink).
     third_party/angle/src/third_party/compiler \
     third_party/angle/src/third_party/libXNVCtrl \
     third_party/angle/src/third_party/trace_event \
+    third_party/angle/third_party/glslang \
+    third_party/angle/third_party/spirv-headers \
+    third_party/angle/third_party/spirv-tools \
+    third_party/angle/third_party/vulkan-validation-layers \
     third_party/boringssl \
     third_party/boringssl/src/third_party/fiat \
     third_party/blink \
@@ -404,6 +349,7 @@ Chromium is an open-source web browser, powered by WebKit (Blink).
     third_party/leveldatabase \
     third_party/libaddressinput \
     third_party/libaom \
+    third_party/libaom/source/libaom/third_party/x86inc \
     third_party/libjingle \
     third_party/libphonenumber \
     third_party/libsecret \
@@ -426,24 +372,21 @@ Chromium is an open-source web browser, powered by WebKit (Blink).
     third_party/mesa \
     third_party/metrics_proto \
     third_party/modp_b64 \
-    third_party/mt19937ar \
     third_party/node \
     third_party/node/node_modules/polymer-bundler/lib/third_party/UglifyJS2 \
-    %if %{freeworld}
     third_party/openh264 \
-    %endif
     third_party/openmax_dl \
     third_party/ots \
     third_party/pdfium \
     third_party/pdfium/third_party/agg23 \
     third_party/pdfium/third_party/base \
     third_party/pdfium/third_party/bigint \
-    third_party/pdfium/third_party/build \
     third_party/pdfium/third_party/freetype \
     third_party/pdfium/third_party/lcms \
     third_party/pdfium/third_party/libopenjpeg20 \
     third_party/pdfium/third_party/libpng16 \
     third_party/pdfium/third_party/libtiff \
+    third_party/pdfium/third_party/skia_shared \
 %if !%{with system_ply}
     third_party/ply \
 %endif
@@ -531,6 +474,7 @@ rmdir third_party/ply
 ln -s %{python2_sitelib}/ply third_party/ply
 %endif
 
+# Fix the path to nodejs binary
 mkdir -p third_party/node/linux/node-linux-x64/bin
 ln -s %{_bindir}/node third_party/node/linux/node-linux-x64/bin/node
 
@@ -555,6 +499,8 @@ export CC=clang CXX=clang++
 export CC=gcc CXX=g++
 export CXXFLAGS="$CXXFLAGS -fno-delete-null-pointer-checks -fpermissive"
 %endif
+
+%if %{obs}
 # do not eat all memory
 ninjaproc="%{?jobs:%{jobs}}"
 echo "Available memory:"
@@ -568,7 +514,7 @@ if test -n "$ninjaproc" -a "$ninjaproc" -gt 1 ; then
     test "$ninjaproc" -gt "$max_jobs" && ninjaproc="$max_jobs" && echo "Warning: Reducing number of jobs to $max_jobs because of memory limits"
     test "$ninjaproc" -le 0 && ninjaproc=1 && echo "Warning: Do not use the parallel build at all becuse of memory limits"
 fi
-
+%endif
 gn_args=(
     is_debug=false
     use_vaapi=true
@@ -581,7 +527,6 @@ gn_args=(
     'system_libdir="lib64"'
 %endif
     use_cups=true
-    use_gconf=false
     use_gnome_keyring=false
     use_gio=true
     use_kerberos=true
@@ -638,7 +583,11 @@ gn_args+=(
 
 ./tools/gn/bootstrap/bootstrap.py --gn-gen-args "${gn_args[*]}"
 ./out/Release/gn gen out/Release --args="${gn_args[*]}"
+%if %{obs}
 ninja -v -j $ninjaproc -C out/Release chrome chrome_sandbox chromedriver widevinecdmadapter
+%else
+ninja -v %{_smp_mflags} -C out/Release chrome chrome_sandbox chromedriver
+%endif
 
 #-----------------------------------------------------------------------------
 %install
@@ -668,7 +617,7 @@ install -m 644 out/Release/icudtl.dat %{buildroot}%{chromiumdir}/
 install -m 755 out/Release/lib*.so* %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/natives_blob.bin %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/snapshot_blob.bin %{buildroot}%{chromiumdir}/
-install -m 644 out/Release/*.pak %{buildroot}%{chromiumdir}/
+install -m 644 out/Release/resources.pak %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/locales/*.pak %{buildroot}%{chromiumdir}/locales/
 for i in 16 32; do
     mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
@@ -685,8 +634,19 @@ done
 
 #------------------------------------------------------------------------------
 %post
+# Set SELinux labels - semanage itself will adjust the lib directory naming
+# But only do it when selinux is enabled, otherwise, it gets noisy.
+if selinuxenabled; then
+	semanage fcontext -a -t bin_t %{chromiumdir}/chromium-browser
+	semanage fcontext -a -t bin_t %{chromiumdir}/chromedriver
+	semanage fcontext -a -t chrome_sandbox_exec_t %{chromiumdir}/chrome-sandbox
+	restorecon -R -v %{chromiumdir}/
+fi
 touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
 update-desktop-database &> /dev/null || :
+
+
+
 #----------------------------------------------------------------------
 %postun
 if [ $1 -eq 0 ] ; then
@@ -725,9 +685,27 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %endif
 %{chromiumdir}/natives_blob.bin
 %{chromiumdir}/snapshot_blob.bin
-%{chromiumdir}/*.pak
+%{chromiumdir}/resources.pak
 %{chromiumdir}/lib*.so*
 %dir %{chromiumdir}/locales
 %{chromiumdir}/locales/*.pak
 %license LICENSE
 %doc AUTHORS
+
+##################################################################################################
+
+%changelog
+* Fri Apr 20 2018 Akarshan Biswas <akarshan.biswas@gmail.com> - 66.0.3359.117-106.chromium_vaapi
+- Update to 66.0.3359.117
+
+* Fri Mar 23 2018 Akarshan Biswas <akarshan.biswas@gmail.com> - 65.0.3325.181-105.chromium_vaapi
+- Update to 65.0.3325.181
+
+* Wed Mar 21 2018 Akarshan Biswas <akarshan.biswas@gmail.com> - 65.0.3325.162-103.chromium_vaapi
+- Update to 65.0.3325.162
+
+* Wed Mar 07 2018 Akarshan Biswas <akarshan.biswas@gmail.com> - 65.0.3325.146-102.chromium_vaapi
+- Updated to 65.0.3325.146
+
+* Thu Mar 01 2018 Akarshan Biswas <akarshan.biswas@gmail.com> - 64.0.3282.186-101.chromium_vaapi
+- Initial release

@@ -15,7 +15,7 @@
     developing a new generation of web applications.
    </p>
    <p>
-    Chromium does not include the non-free AAC, H.264, MP3 or Adobe Flash code
+    Chromium may not include the non-free AAC, H.264, MP3 or Adobe Flash code
     that is found in Chrome, although it does support Vorbis, Theora, WebM and
     HTML5 audio and video standards.
    </p>

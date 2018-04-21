@@ -23,7 +23,7 @@ CHROMIUM_DISTRO_FLAGS=" --enable-plugins \
                         --enable-extensions \
                         --enable-user-scripts \
                         --enable-printing \
-		        --enable-features=ParallelDownloading \
+		        --disable-gpu-driver-bug-workarounds \
 		        --enable-accelerated-video \
                         --enable-sync"
 
