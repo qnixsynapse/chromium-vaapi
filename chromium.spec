@@ -37,7 +37,7 @@
 %endif
 
 # Require libxml2 > 2.9.4 for XML_PARSE_NOXXE
-%if 0%{?fedora} >= 27
+%if 0%{?fedora} >= 28
 %bcond_without system_libxml2
 %else
 %bcond_with system_libxml2
