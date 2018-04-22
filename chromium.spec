@@ -12,7 +12,7 @@
 #Global Libraries
 #Do not turn these on in Fedora copr!
 %global obs 0
-%global freeworld 0
+%global freeworld 1
 ### Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 ### Note: These are for Fedora use ONLY.
 ### For your own distribution, please get your own set of keys.
@@ -23,6 +23,8 @@
 %global chromiumdir %{_libdir}/chromium-browser
 %global __provides_exclude_from ^%{chromiumdir}/.*$
 ########################################################################################################################
+#######################################configs###############################################################
+
 %if 0%{?fedora} < 26
 %bcond_without system_jinja2
 %else
@@ -59,20 +61,15 @@
 # Allow building with symbols to ease debugging
 # Enabled by default because Fedora Copr has enough memory
 #Disabled by default in OBS because it has less memory
-%bcond_without symbol
+%global symbol 0
 
 # Allow compiling with clang
-# Disabled by default becaue gcc is the system compiler
-%bcond_with clang
+# Disabled by default because gcc is the system compiler(Should be enabled by default as gcc has a lot of bugs)
+%global clang 0
 
-# Allow disabling unconditional build dependency on clang
-# Enabled by default because nacl always uses clang to compile some files
-%bcond_without require_clang
 
-# Allow using compilation flags set by Fedora RPM macros
-# Disabled by default because it causes out-of-memory error on Fedora Copr
-%bcond_with fedora_compilation_flags
 
+########################################################################################################
 Name:       chromium
 Version:    66.0.3359.117
 Release:    106%{?dist}.chromium_vaapi
@@ -144,7 +141,7 @@ Patch2:    widevine.patch
 # https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=2ad380a
 #Patch3:    memcpy.patch
 #Patch3:    icu.patch
-Patch10:    osxgtkthemepatch.patch
+#Patch10:    osxgtkthemepatch.patch
 #Patch6:    skia.patch
 #Vaapi Patches from inox-patchset
 #Patch4:    move.patch
@@ -152,11 +149,18 @@ Patch10:    osxgtkthemepatch.patch
 #Patch6:    2ndstep.patch
 #Patch7:    rgbx.patch
 #Patch6:    init.patch
+#how the hell they forgot about adding this to the tarball :@
 Patch11:    blinktools.patch
+%if !%{clang}
+#Gcc patches because GCC taken from lantw44/chromium/ copr repo
 Patch12:    gcc7-r540828.patch
 Patch13:    gcc7-r541029.patch
 Patch14:    gcc7-r541827.patch
-Patch15:    unrar.patch
+Patch15:    gcc7516.patch
+Patch16:    gcc7815.patch
+%endif
+Patch50:    unrar.patch
+Patch51:    mojojojo.patch
 #Video acceleration patch from https://chromium-review.googlesource.com/c/chromium/src/+/532294
 Patch100:    vaapi.patch
 
@@ -167,11 +171,11 @@ BuildRequires: gcc >= 5.1.1-2
 %endif
 # Chromium 54 requires clang to enable nacl support
 # Chromium 59 requires llvm-ar to enable nacl support
-%if %{with clang} || %{with require_clang}
+%if %{clang}
 BuildRequires: clang, llvm
 %endif
 # Basic tools and libraries
-BuildRequires: ninja-build, nodejs, bison, gperf, hwdata
+BuildRequires: ninja-build, nodejs, bison, gperf, hwdata, 
 BuildRequires: libgcc, glibc, libatomic
 BuildRequires: libcap-devel, cups-devel, minizip-devel, alsa-lib-devel
 BuildRequires: mesa-libGL-devel, mesa-libEGL-devel
@@ -258,7 +262,7 @@ Provides:      chromedriver-stable = %{version}-%{release}
 Conflicts:     chromedriver-testing
 Conflicts:     chromedriver-unstable
 
-%if !%{with symbol}
+%if !%{symbol}
 %global debug_package %{nil}
 %endif
 
@@ -484,36 +488,11 @@ sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"Chromium Vaapi for Fedora"/' $
 
 ########################################################################################
 %build
-export AR=ar NM=nm
 
-# Fedora 25 doesn't have __global_cxxflags
-%if %{with fedora_compilation_flags}
-export CFLAGS="$(echo '%{__global_cflags}' | sed 's/-fexceptions//')"
-export CXXFLAGS="$(echo '%{?__global_cxxflags}%{!?__global_cxxflags:%{__global_cflags}}' | sed 's/-fexceptions//')"
-export LDFLAGS='%{__global_ldflags}'
-%endif
-
-%if %{with clang}
-export CC=clang CXX=clang++
-%else
-export CC=gcc CXX=g++
-export CXXFLAGS="$CXXFLAGS -fno-delete-null-pointer-checks -fpermissive"
-%endif
 
 %if %{obs}
 # do not eat all memory
-ninjaproc="%{?jobs:%{jobs}}"
-echo "Available memory:"
-cat /proc/meminfo
-echo "System limits:"
-ulimit -a
-if test -n "$ninjaproc" -a "$ninjaproc" -gt 1 ; then
-    mem_per_process=1600000
-    max_mem=$(awk '/MemTotal/ { print $2 }' /proc/meminfo)
-    max_jobs="$(($max_mem / $mem_per_process))"
-    test "$ninjaproc" -gt "$max_jobs" && ninjaproc="$max_jobs" && echo "Warning: Reducing number of jobs to $max_jobs because of memory limits"
-    test "$ninjaproc" -le 0 && ninjaproc=1 && echo "Warning: Do not use the parallel build at all becuse of memory limits"
-fi
+%limit_build -m 1600
 %endif
 gn_args=(
     is_debug=false
@@ -558,15 +537,11 @@ gn_args=(
     'google_default_client_secret="%{default_client_secret}"'
 )
 
-gn_args+=(
-%if %{with clang} || %{with require_clang}
-    'clang_base_path="/usr"'
-%endif
-)
+
 
 gn_args+=(
-%if %{with clang}
-    is_clang=true
+%if %{clang}
+    
     clang_use_chrome_plugins=false
 %else
     is_clang=false
@@ -574,17 +549,27 @@ gn_args+=(
 )
 
 gn_args+=(
-%if %{with symbol}
+%if %{symbol}
     symbol_level=1
 %else
     symbol_level=0
 %endif
 )
 
-./tools/gn/bootstrap/bootstrap.py --gn-gen-args "${gn_args[*]}"
+
+#export compilar variables
+export AR=ar NM=nm
+
+%if %{clang}
+export CC=clang CXX=clang++
+%else
+export CC=gcc CXX=g++
+export CXXFLAGS="$CXXFLAGS -fno-delete-null-pointer-checks -fpermissive"
+%endif
+./tools/gn/bootstrap/bootstrap.py  --gn-gen-args "${gn_args[*]}"
 ./out/Release/gn gen out/Release --args="${gn_args[*]}"
-%if %{obs}
-ninja -v -j $ninjaproc -C out/Release chrome chrome_sandbox chromedriver widevinecdmadapter
+%if %{freeworld}
+ninja -v %{_smp_mflags} -C out/Release chrome chrome_sandbox chromedriver widevinecdmadapter
 %else
 ninja -v %{_smp_mflags} -C out/Release chrome chrome_sandbox chromedriver
 %endif
