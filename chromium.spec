@@ -600,7 +600,7 @@ install -m 755 out/Release/chromedriver %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/icudtl.dat %{buildroot}%{chromiumdir}/
 %endif
 install -m 755 out/Release/lib*.so* %{buildroot}%{chromiumdir}/
-install -m 644 out/Release/natives_blob.bin %{buildroot}%{chromiumdir}/
+install -m 644 out/Release/v8_context_snapshot.bin %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/snapshot_blob.bin %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/resources.pak %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/locales/*.pak %{buildroot}%{chromiumdir}/locales/
@@ -668,7 +668,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %if !%{with system_libicu}
 %{chromiumdir}/icudtl.dat
 %endif
-%{chromiumdir}/natives_blob.bin
+%{chromiumdir}/v8_context_snapshot.bin
 %{chromiumdir}/snapshot_blob.bin
 %{chromiumdir}/resources.pak
 %{chromiumdir}/lib*.so*
