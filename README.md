@@ -17,8 +17,9 @@ If vainfo gives an error try "export LIBVA_DRIVER_NAME=[codename of your amd gpu
 
 Nvidia user install libva-vdpau-driver
 
-Intel GPU:libva-intel-driver
+Intel GPU:libva-intel-hybrid-driver
 
-This copr build doesn't include proprietary codecs like h264. In order to fully test vaapi capabilities install chromium from Github release tab. 
+The copr build doesn't include proprietary codecs like h264. In order to fully test vaapi capabilities install chromium from Github release tab on this repo. 
 This package might cause conflicts with similar packages on the system.
 
+From now Added clang support to build chromium with the help of clang instead of gcc. A lot less patching requires and less binary size. Build significantly faster too.
