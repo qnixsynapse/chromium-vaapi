@@ -503,21 +503,7 @@ sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"Chromium Vaapi for Fedora"/' $
 
 ########################################################################################
 %build
-%if %{obs}
-# do not eat all memory on open build service
-ninjaproc="%{?jobs:%{jobs}}"
-echo "Available memory:"
-cat /proc/meminfo
-echo "System limits:"
-ulimit -a
-if test -n "$ninjaproc" -a "$ninjaproc" -gt 1 ; then
-    mem_per_process=1600000
-    max_mem=$(awk '/MemTotal/ { print $2 }' /proc/meminfo)
-    max_jobs="$(($max_mem / $mem_per_process))"
-    test "$ninjaproc" -gt "$max_jobs" && ninjaproc="$max_jobs" && echo "Warning: Reducing number of jobs to $max_jobs because of memory limits"
-    test "$ninjaproc" -le 0 && ninjaproc=1 && echo "Warning: Do not use the parallel build at all becuse of memory limits"
-fi
-%endif
+
 
 
 gn_args=(
@@ -545,6 +531,7 @@ gn_args=(
     enable_hangout_services_extension=true
     'ffmpeg_branding="Chrome"'
     proprietary_codecs=true
+    enable_widevine=true
 %else
     'ffmpeg_branding="Chromium"'
     proprietary_codecs=false
