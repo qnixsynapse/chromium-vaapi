@@ -68,7 +68,7 @@
 # Allow building with symbols to ease debugging
 # Enabled by default because Fedora Copr has enough memory
 #Disabled by default in OBS because it has less memory
-%global symbol 1
+%global symbol 0
 
 # Allow compiling with clang
 # Enabled by default because gcc is shit 
