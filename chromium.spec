@@ -12,7 +12,7 @@
 #Global Libraries
 #Do not turn these on in Fedora copr!
 %global obs 0
-%global freeworld 1
+%global freeworld 0
 ### Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 ### Note: These are for Fedora use ONLY.
 ### For your own distribution, please get your own set of keys.
@@ -21,9 +21,16 @@
 %global default_client_id 449907151817.apps.googleusercontent.com
 %global default_client_secret miEreAep8nuvTdvLums6qyLK
 %global chromiumdir %{_libdir}/chromium-browser
-%global __provides_exclude_from ^%{chromiumdir}/.*$
+
+####################################Bullshit Area##################################################
+%global __provides_exclude_from %{chromium_path}/.*\\.so|%{chromium_path}/lib/.*\\.so
+%global privlibs libaccessibility|libanimation|libaura_extra|libaura|libbase_i18n|libbase|libbindings|libblink_android_mojo_bindings_shared|libblink_common|libblink_controller|libblink_core_mojo_bindings_shared|libblink_core|libblink_modules|libblink_mojo_bindings_shared|libblink_offscreen_canvas_mojo_bindings_shared|libblink_platform|libbluetooth|libboringssl|libbrowser_ui_views|libcaptive_portal|libcapture_base|libcapture_lib|libcbor|libcc_animation|libcc_base|libcc_blink|libcc_debug|libcc_ipc|libcc_paint|libcc|libcdm_manager|libchromium_sqlite3|libclearkeycdm|libclient|libcloud_policy_proto_generated_compile|libcodec|libcolor_space|libcommon|libcompositor|libcontent_common_mojo_bindings_shared|libcontent_public_common_mojo_bindings_shared|libcontent|libcpp|libcrash_key|libcrcrypto|libdbus|libdevice_base|libdevice_event_log|libdevice_features|libdevice_gamepad|libdevices|libdevice_vr_mojo_bindings_blink|libdevice_vr_mojo_bindings_shared|libdevice_vr_mojo_bindings|libdevice_vr|libdiscardable_memory_client|libdiscardable_memory_common|libdiscardable_memory_service|libdisplay|libdisplay_types|libdisplay_util|libdomain_reliability|libEGL|libembedder|libembedder_switches|libevents_base|libevents_devices_x11|libevents_ozone_layout|libevents|libevents_x|libffmpeg|libfingerprint|libfontconfig|libfreetype_harfbuzz|libgcm|libgeolocation|libgeometry_skia|libgeometry|libgesture_detection|libgfx_ipc_buffer_types|libgfx_ipc_color|libgfx_ipc_geometry|libgfx_ipc_skia|libgfx_ipc|libgfx|libgfx_switches|libgfx_x11|libgin|libgles2_c_lib|libgles2_implementation|libgles2|libgles2_utils|libGLESv2|libgl_init|libgl_in_process_context|libgl_wrapper|libgpu_ipc_service|libgpu|libgpu_util|libgtk3ui|libheadless|libhost|libicui18n|libicuuc|libipc_mojom_shared|libipc_mojom|libipc|libkeyboard|libkeyboard_with_content|libkeycodes_x11|libkeyed_service_content|libkeyed_service_core|libleveldatabase|libmanager|libmedia_blink|libmedia_devices_mojo_bindings_shared|libmedia_gpu|libmedia_mojo_services|libmedia|libmessage_center|libmessage_support|libmetrics_cpp|libmidi|libmojo_base_lib|libmojo_base_mojom_blink|libmojo_base_mojom_shared|libmojo_base_mojom|libmojo_base_shared_typemap_traits|libmojo_bindings_shared|libmojo_common_lib|libmojo_ime_lib|libmojo_platform_bindings_shared|libmojo_public_system_cpp|libmojo_public_system|libmojo_system_impl|libnative_theme|libnet|libnet_with_v8|libnetwork_session_configurator|libonc|libplatform|libpolicy_component|libpolicy_proto|libppapi_host|libppapi_proxy|libppapi_shared|libprefs|libprinting|libprotobuf_lite|libproxy_config|librange|libresource_coordinator_cpp_base|libresource_coordinator_cpp|libresource_coordinator_public_interfaces_blink|libresource_coordinator_public_interfaces_shared|libresource_coordinator_public_interfaces|libsandbox_services|libsandbox|libseccomp_bpf|libsensors|libservice_manager_cpp|libservice_manager_cpp_types|libservice_manager_mojom_blink|libservice_manager_mojom_constants_blink|libservice_manager_mojom_constants_shared|libservice_manager_mojom_constants|libservice_manager_mojom_shared|libservice_manager_mojom|libservice|libsessions|libshared_memory_support|libshell_dialogs|libskia|libsnapshot|libsql|libstartup_tracing|libstorage_browser|libstorage_common|libstub_window|libsuid_sandbox_client|libsurface|libtracing|libui_base_ime|libui_base|libui_base_x|libui_data_pack|libui_devtools|libui_touch_selection|libui_views_mus_lib|liburl_ipc|liburl_matcher|liburl|libuser_manager|libuser_prefs|libv8_libbase|libv8_libplatform|libv8|libviews|libviz_common|libviz_resource_format|libVkLayer_core_validation|libVkLayer_object_tracker|libVkLayer_parameter_validation|libVkLayer_threading|libVkLayer_unique_objects|libwebdata_common|libweb_dialogs|libwebview|libwidevinecdmadapter|libwidevinecdm|libwm_public|libwm|libwtf|libx11_events_platform|libx11_window
+%global __requires_exclude ^(%{privlibs})\\.so
+
 ########################################################################################################################
-#######################################configs###############################################################
+
+
+#######################################CONFIGS###############################################################
 
 %if 0%{?fedora} < 26
 %bcond_without system_jinja2
@@ -39,14 +46,14 @@
 %endif
 
 # Require libxml2 > 2.9.4 for XML_PARSE_NOXXE
-%if 0%{?fedora} >= 28
+%if 0%{?fedora} >= 27
 %bcond_without system_libxml2
 %else
 %bcond_with system_libxml2
 %endif
 
 # Require harfbuzz >= 1.5.0 for hb_glyph_info_t
-%if 0%{?fedora} >= 27
+%if 0%{?fedora} >= 28
 %bcond_without system_harfbuzz
 %else
 %bcond_with system_harfbuzz
@@ -61,18 +68,22 @@
 # Allow building with symbols to ease debugging
 # Enabled by default because Fedora Copr has enough memory
 #Disabled by default in OBS because it has less memory
-%global symbol 0
+%global symbol 1
 
 # Allow compiling with clang
-# Disabled by default because gcc is the system compiler(Should be enabled by default as gcc has a lot of bugs)
-%global clang 0
+# Enabled by default because gcc is shit 
 
+%global clang 1
+
+# Allow using compilation flags set by Fedora RPM macros
+# Disabled by default because it causes out-of-memory error on Fedora Copr
+%bcond_with fedora_compilation_flags
 
 
 ########################################################################################################
 Name:       chromium
 Version:    66.0.3359.117
-Release:    106%{?dist}.chromium_vaapi
+Release:    108%{?dist}.chromium_vaapi
 Summary:    A WebKit (Blink) powered web browser with video acceleration
 
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
@@ -99,6 +110,8 @@ Source0:    chromium-%{version}-clean.tar.xz
 Source1:    chromium-latest.py
 Source2:    chromium-ffmpeg-clean.sh
 Source3:    chromium-ffmpeg-free-sources.py
+#Added clang llvm compiler to save myself from outdated gcc from http://releases.llvm.org/download.html(prebuilt binaries)
+Source4:    llvm-clang.tar.xz
 
 # The following two source files are copied and modified from
 # https://repos.fedorapeople.org/repos/spot/chromium/
@@ -115,67 +128,47 @@ Source13:   chromium-browser.appdata.xml
 Patch1:    commit.patch
 Patch2:    widevine.patch
 
-# Add a patch from Gentoo to fix ANGLE build
-# https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=1a8dd9f
-#Patch2:    angle.patch
-#Gcc patches from gentoo
-#Patch8:		gcc71.patch
-#Patch9:		gcc72.patch
-#Patch10:	gcc73.patch
-#Patch11:	gcc74.patch
-#Patch12:	gcc75.patch
-#Patch13:	gcc76.patch
-#Patch14:	gcc77.patch
-#Patch15:	gcc78.patch
-#Patch16:	gcc79.patch
-#Patch17:	gcc710.patch
-#Patch18:	gcc711.patch
-#Patch19:	gcc712.patch
-#Patch20:	gcc713.patch
-#Patch21:	gcc714.patch
-#Patch22:	gcc715.patch
-
-
-# Add a patch from Gentoo to fix compositor build
-# https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=9b71cea
-# https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=2ad380a
-#Patch3:    memcpy.patch
-#Patch3:    icu.patch
-#Patch10:    osxgtkthemepatch.patch
-#Patch6:    skia.patch
-#Vaapi Patches from inox-patchset
-#Patch4:    move.patch
-#Patch5:    init.patch
-#Patch6:    2ndstep.patch
-#Patch7:    rgbx.patch
-#Patch6:    init.patch
 #how the hell they forgot about adding this to the tarball :@
 Patch11:    blinktools.patch
-%if !%{clang}
-#Gcc patches because GCC taken from lantw44/chromium/ copr repo
+
+
+
+
+%if %{clang}
+#Will use any clang patch here
+
+
+%else
+#Gcc patches area. 
 Patch12:    gcc7-r540828.patch
 Patch13:    gcc7-r541029.patch
 Patch14:    gcc7-r541827.patch
 Patch15:    gcc7516.patch
 Patch16:    gcc7815.patch
+
+# Add a patch from Fedora to fix build with GCC 8
+# https://src.fedoraproject.org/cgit/rpms/chromium.git/commit/?id=8cfa28d
+# https://src.fedoraproject.org/cgit/rpms/chromium.git/commit/?id=61203bf
+Patch17:    mojojojo.patch
 %endif
+
 Patch50:    unrar.patch
-Patch51:    mojojojo.patch
+
 #Video acceleration patch from https://chromium-review.googlesource.com/c/chromium/src/+/532294
 Patch100:    vaapi.patch
 
-
-# Make sure we don't encounter GCC 5.1 bug
+%if !%{clang}
+# Make sure we don't encounter any bug! GCC below 7.3.1-5 fails.
 %if 0%{?fedora} >= 22
-BuildRequires: gcc >= 5.1.1-2
+BuildRequires: gcc >= 7.3.1-5
+%endif
 %endif
 # Chromium 54 requires clang to enable nacl support
 # Chromium 59 requires llvm-ar to enable nacl support
-%if %{clang}
-BuildRequires: clang, llvm
-%endif
+
+#BuildRequires: clang, llvm
 # Basic tools and libraries
-BuildRequires: ninja-build, nodejs, bison, gperf, hwdata, 
+BuildRequires: ninja-build, nodejs, bison, gperf, hwdata
 BuildRequires: libgcc, glibc, libatomic
 BuildRequires: libcap-devel, cups-devel, minizip-devel, alsa-lib-devel
 BuildRequires: mesa-libGL-devel, mesa-libEGL-devel
@@ -234,17 +227,27 @@ BuildRequires: zlib-devel
 BuildRequires: pciutils-devel
 BuildRequires: speech-dispatcher-devel
 BuildRequires: pulseaudio-libs-devel
+# install desktop files
+BuildRequires: desktop-file-utils
 # install AppData files
 BuildRequires: libappstream-glib
+
+
+
+
+
 #for vaapi
 BuildRequires:	libva-devel
 #------------------------------------------------------------------------------------------
 Requires(post):   desktop-file-utils
 Requires(postun): desktop-file-utils
+
 # For selinux scriptlet
-Requires(post): /usr/sbin/semanage
-Requires(post): /usr/sbin/restorecon
+#Requires(post): /usr/sbin/semanage
+#Requires(post): /usr/sbin/restorecon
 Requires:         hicolor-icon-theme
+
+#Libva required
 Requires:	libva
 Obsoletes:     chromedriver <= %{version}-%{release}
 Obsoletes:     chromium-common <= %{version}-%{release}
@@ -271,6 +274,13 @@ Chromium is an open-source web browser, powered by WebKit (Blink).
 ###########################################################################################################################
 %prep
 %autosetup -p1
+%if %{clang}
+#Add and extract clang llvm to third_party dir
+pushd third_party
+tar -xf %{SOURCE4} 
+chmod +x -R llvm-clang/bin/*
+popd
+%endif
 
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
     base/third_party/dmg_fp \
@@ -371,6 +381,9 @@ Chromium is an open-source web browser, powered by WebKit (Blink).
 %endif
     third_party/libXNVCtrl \
     third_party/libyuv \
+%if %{clang}
+    third_party/llvm-clang \
+%endif
     third_party/lss \
     third_party/lzma_sdk \
     third_party/mesa \
@@ -465,6 +478,8 @@ sed -i 's|^\(#include "[^"]*\)//\([^"]*"\)|\1/\2|' \
     third_party/webrtc/modules/audio_processing/utility/ooura_fft.cc \
     third_party/webrtc/modules/audio_processing/utility/ooura_fft_sse2.cc
 
+
+
 %if %{with system_jinja2}
 rmdir third_party/jinja2
 ln -s %{python2_sitelib}/jinja2 third_party/jinja2
@@ -488,12 +503,23 @@ sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"Chromium Vaapi for Fedora"/' $
 
 ########################################################################################
 %build
-
-
 %if %{obs}
-# do not eat all memory
-%limit_build -m 1600
+# do not eat all memory on open build service
+ninjaproc="%{?jobs:%{jobs}}"
+echo "Available memory:"
+cat /proc/meminfo
+echo "System limits:"
+ulimit -a
+if test -n "$ninjaproc" -a "$ninjaproc" -gt 1 ; then
+    mem_per_process=1600000
+    max_mem=$(awk '/MemTotal/ { print $2 }' /proc/meminfo)
+    max_jobs="$(($max_mem / $mem_per_process))"
+    test "$ninjaproc" -gt "$max_jobs" && ninjaproc="$max_jobs" && echo "Warning: Reducing number of jobs to $max_jobs because of memory limits"
+    test "$ninjaproc" -le 0 && ninjaproc=1 && echo "Warning: Do not use the parallel build at all becuse of memory limits"
+fi
 %endif
+
+
 gn_args=(
     is_debug=false
     use_vaapi=true
@@ -539,9 +565,15 @@ gn_args=(
 
 
 
+
 gn_args+=(
 %if %{clang}
-    
+    is_clang=true
+%if %{obs}
+   'clang_base_path = "~/rpmbuild/BUILD/chromium-%{version}/third_party/llvm-clang/"'
+%else
+'clang_base_path = "~/build/BUILD/chromium-%{version}/third_party/llvm-clang/"'
+%endif
     clang_use_chrome_plugins=false
 %else
     is_clang=false
@@ -556,18 +588,35 @@ gn_args+=(
 %endif
 )
 
-
 #export compilar variables
 export AR=ar NM=nm
 
+# Fedora 25 doesn't have __global_cxxflags
+%if %{with fedora_compilation_flags}
+export CFLAGS="$(echo '%{__global_cflags}' | sed 's/-fexceptions//')"
+export CXXFLAGS="$(echo '%{?__global_cxxflags}%{!?__global_cxxflags:%{__global_cflags}}' | sed 's/-fexceptions//')"
+export LDFLAGS='%{__global_ldflags}'
+%endif
+
 %if %{clang}
-export CC=clang CXX=clang++
+%if %{obs}
+export CC=~/rpmbuild/BUILD/chromium-%{version}/third_party/llvm-clang/bin/clang 
+export CXX=~/rpmbuild/BUILD/chromium-%{version}/third_party/llvm-clang/bin/clang++
+%else
+export CC=~/build/BUILD/chromium-%{version}/third_party/llvm-clang/bin/clang
+export CXX=~/build/BUILD/chromium-%{version}/third_party/llvm-clang/bin/clang++
+%endif
 %else
 export CC=gcc CXX=g++
 export CXXFLAGS="$CXXFLAGS -fno-delete-null-pointer-checks -fpermissive"
 %endif
-./tools/gn/bootstrap/bootstrap.py  --gn-gen-args "${gn_args[*]}"
-./out/Release/gn gen out/Release --args="${gn_args[*]}"
+
+
+
+
+tools/gn/bootstrap/bootstrap.py -v --gn-gen-args "${gn_args[*]}"
+out/Release/gn gen out/Release --args="${gn_args[*]}"
+
 %if %{freeworld}
 ninja -v %{_smp_mflags} -C out/Release chrome chrome_sandbox chromedriver widevinecdmadapter
 %else
@@ -600,9 +649,9 @@ install -m 755 out/Release/chromedriver %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/icudtl.dat %{buildroot}%{chromiumdir}/
 %endif
 install -m 755 out/Release/lib*.so* %{buildroot}%{chromiumdir}/
+install -m 644 out/Release/natives_blob.bin %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/v8_context_snapshot.bin %{buildroot}%{chromiumdir}/
-install -m 644 out/Release/snapshot_blob.bin %{buildroot}%{chromiumdir}/
-install -m 644 out/Release/resources.pak %{buildroot}%{chromiumdir}/
+install -m 644 out/Release/*.pak %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/locales/*.pak %{buildroot}%{chromiumdir}/locales/
 for i in 16 32; do
     mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
@@ -621,12 +670,13 @@ done
 %post
 # Set SELinux labels - semanage itself will adjust the lib directory naming
 # But only do it when selinux is enabled, otherwise, it gets noisy.
-if selinuxenabled; then
-	semanage fcontext -a -t bin_t %{chromiumdir}/chromium-browser
-	semanage fcontext -a -t bin_t %{chromiumdir}/chromedriver
-	semanage fcontext -a -t chrome_sandbox_exec_t %{chromiumdir}/chrome-sandbox
-	restorecon -R -v %{chromiumdir}/
-fi
+#Disabling this for the moment
+#if selinuxenabled; then
+#	semanage fcontext -a -t bin_t %{chromiumdir}/chromium-browser
+#	semanage fcontext -a -t bin_t %{chromiumdir}/chromedriver
+#	semanage fcontext -a -t chrome_sandbox_exec_t %{chromiumdir}/chrome-sandbox
+#	restorecon -R -v %{chromiumdir}/
+#fi
 touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
 update-desktop-database &> /dev/null || :
 
@@ -668,9 +718,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %if !%{with system_libicu}
 %{chromiumdir}/icudtl.dat
 %endif
+%{chromiumdir}/natives_blob.bin
 %{chromiumdir}/v8_context_snapshot.bin
-%{chromiumdir}/snapshot_blob.bin
-%{chromiumdir}/resources.pak
+%{chromiumdir}/*.pak
 %{chromiumdir}/lib*.so*
 %dir %{chromiumdir}/locales
 %{chromiumdir}/locales/*.pak
@@ -680,6 +730,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 ##################################################################################################
 
 %changelog
+* Mon Apr 23 2018 Akarshan Biswas <akarshan.biswas@gmail.com> - 66.0.3359.117-108.chromium_vaapi
+- Fixed crashing by adding v8_context_snapshot and Changed to llvm clang from
+  gcc
+
 * Fri Apr 20 2018 Akarshan Biswas <akarshan.biswas@gmail.com> - 66.0.3359.117-106.chromium_vaapi
 - Update to 66.0.3359.117
 
