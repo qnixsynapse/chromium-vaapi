@@ -22,13 +22,10 @@
 %global default_client_secret miEreAep8nuvTdvLums6qyLK
 %global chromiumdir %{_libdir}/chromium-browser
 
-####################################Bullshit Area##################################################
-%global __provides_exclude_from %{chromium_path}/.*\\.so|%{chromium_path}/lib/.*\\.so
-%global privlibs libaccessibility|libanimation|libaura_extra|libaura|libbase_i18n|libbase|libbindings|libblink_android_mojo_bindings_shared|libblink_common|libblink_controller|libblink_core_mojo_bindings_shared|libblink_core|libblink_modules|libblink_mojo_bindings_shared|libblink_offscreen_canvas_mojo_bindings_shared|libblink_platform|libbluetooth|libboringssl|libbrowser_ui_views|libcaptive_portal|libcapture_base|libcapture_lib|libcbor|libcc_animation|libcc_base|libcc_blink|libcc_debug|libcc_ipc|libcc_paint|libcc|libcdm_manager|libchromium_sqlite3|libclearkeycdm|libclient|libcloud_policy_proto_generated_compile|libcodec|libcolor_space|libcommon|libcompositor|libcontent_common_mojo_bindings_shared|libcontent_public_common_mojo_bindings_shared|libcontent|libcpp|libcrash_key|libcrcrypto|libdbus|libdevice_base|libdevice_event_log|libdevice_features|libdevice_gamepad|libdevices|libdevice_vr_mojo_bindings_blink|libdevice_vr_mojo_bindings_shared|libdevice_vr_mojo_bindings|libdevice_vr|libdiscardable_memory_client|libdiscardable_memory_common|libdiscardable_memory_service|libdisplay|libdisplay_types|libdisplay_util|libdomain_reliability|libEGL|libembedder|libembedder_switches|libevents_base|libevents_devices_x11|libevents_ozone_layout|libevents|libevents_x|libffmpeg|libfingerprint|libfontconfig|libfreetype_harfbuzz|libgcm|libgeolocation|libgeometry_skia|libgeometry|libgesture_detection|libgfx_ipc_buffer_types|libgfx_ipc_color|libgfx_ipc_geometry|libgfx_ipc_skia|libgfx_ipc|libgfx|libgfx_switches|libgfx_x11|libgin|libgles2_c_lib|libgles2_implementation|libgles2|libgles2_utils|libGLESv2|libgl_init|libgl_in_process_context|libgl_wrapper|libgpu_ipc_service|libgpu|libgpu_util|libgtk3ui|libheadless|libhost|libicui18n|libicuuc|libipc_mojom_shared|libipc_mojom|libipc|libkeyboard|libkeyboard_with_content|libkeycodes_x11|libkeyed_service_content|libkeyed_service_core|libleveldatabase|libmanager|libmedia_blink|libmedia_devices_mojo_bindings_shared|libmedia_gpu|libmedia_mojo_services|libmedia|libmessage_center|libmessage_support|libmetrics_cpp|libmidi|libmojo_base_lib|libmojo_base_mojom_blink|libmojo_base_mojom_shared|libmojo_base_mojom|libmojo_base_shared_typemap_traits|libmojo_bindings_shared|libmojo_common_lib|libmojo_ime_lib|libmojo_platform_bindings_shared|libmojo_public_system_cpp|libmojo_public_system|libmojo_system_impl|libnative_theme|libnet|libnet_with_v8|libnetwork_session_configurator|libonc|libplatform|libpolicy_component|libpolicy_proto|libppapi_host|libppapi_proxy|libppapi_shared|libprefs|libprinting|libprotobuf_lite|libproxy_config|librange|libresource_coordinator_cpp_base|libresource_coordinator_cpp|libresource_coordinator_public_interfaces_blink|libresource_coordinator_public_interfaces_shared|libresource_coordinator_public_interfaces|libsandbox_services|libsandbox|libseccomp_bpf|libsensors|libservice_manager_cpp|libservice_manager_cpp_types|libservice_manager_mojom_blink|libservice_manager_mojom_constants_blink|libservice_manager_mojom_constants_shared|libservice_manager_mojom_constants|libservice_manager_mojom_shared|libservice_manager_mojom|libservice|libsessions|libshared_memory_support|libshell_dialogs|libskia|libsnapshot|libsql|libstartup_tracing|libstorage_browser|libstorage_common|libstub_window|libsuid_sandbox_client|libsurface|libtracing|libui_base_ime|libui_base|libui_base_x|libui_data_pack|libui_devtools|libui_touch_selection|libui_views_mus_lib|liburl_ipc|liburl_matcher|liburl|libuser_manager|libuser_prefs|libv8_libbase|libv8_libplatform|libv8|libviews|libviz_common|libviz_resource_format|libVkLayer_core_validation|libVkLayer_object_tracker|libVkLayer_parameter_validation|libVkLayer_threading|libVkLayer_unique_objects|libwebdata_common|libweb_dialogs|libwebview|libwidevinecdmadapter|libwidevinecdm|libwm_public|libwm|libwtf|libx11_events_platform|libx11_window
-%global __requires_exclude ^(%{privlibs})\\.so
 
 ########################################################################################################################
-
+%global chromiumdir %{_libdir}/chromium-browser
+%global __provides_exclude_from ^%{chromiumdir}/.*$
 
 #######################################CONFIGS###############################################################
 
@@ -152,10 +149,15 @@ Patch16:    gcc7815.patch
 Patch17:    mojojojo.patch
 %endif
 
+#More patches to fix chromium build here
 Patch50:    unrar.patch
 
 #Video acceleration patch from https://chromium-review.googlesource.com/c/chromium/src/+/532294
 Patch100:    vaapi.patch
+
+
+#Build exclusively for amd64
+ExclusiveArch: x86_64
 
 %if !%{clang}
 # Make sure we don't encounter any bug! GCC below 7.3.1-5 fails.
@@ -232,13 +234,11 @@ BuildRequires: desktop-file-utils
 # install AppData files
 BuildRequires: libappstream-glib
 
-
-
-
-
 #for vaapi
 BuildRequires:	libva-devel
-#------------------------------------------------------------------------------------------
+
+
+
 Requires(post):   desktop-file-utils
 Requires(postun): desktop-file-utils
 
@@ -514,9 +514,7 @@ gn_args=(
     use_sysroot=false
     use_custom_libcxx=false
     use_aura=true
-%ifarch x86_64
-    'system_libdir="lib64"'
-%endif
+    'system_libdir="%{_lib}"'
     use_cups=true
     use_gnome_keyring=false
     use_gio=true
@@ -536,6 +534,7 @@ gn_args=(
     'ffmpeg_branding="Chromium"'
     proprietary_codecs=false
     enable_hangout_services_extension=false
+    enable_widevine=false
 %endif
     enable_nacl=false
     enable_webrtc=true
@@ -635,7 +634,9 @@ install -m 755 out/Release/chromedriver %{buildroot}%{chromiumdir}/
 %if !%{with system_libicu}
 install -m 644 out/Release/icudtl.dat %{buildroot}%{chromiumdir}/
 %endif
-install -m 755 out/Release/lib*.so* %{buildroot}%{chromiumdir}/
+%if %{freeworld}
+install -m 755 out/Release/libwidevinecdmadapter.so %{buildroot}%{chromiumdir}/
+%endif
 install -m 644 out/Release/natives_blob.bin %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/v8_context_snapshot.bin %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/*.pak %{buildroot}%{chromiumdir}/
@@ -708,7 +709,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %{chromiumdir}/natives_blob.bin
 %{chromiumdir}/v8_context_snapshot.bin
 %{chromiumdir}/*.pak
-%{chromiumdir}/lib*.so*
+%if %{freeworld}
+%{chromiumdir}/libwidevinecdmadapter.so
+%endif
 %dir %{chromiumdir}/locales
 %{chromiumdir}/locales/*.pak
 %license LICENSE
