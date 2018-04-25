@@ -23,7 +23,6 @@ CHROMIUM_DISTRO_FLAGS=" --enable-plugins \
                         --enable-extensions \
                         --enable-user-scripts \
                         --enable-printing \
-		        --disable-gpu-driver-bug-workarounds \
 		        --enable-accelerated-video \
                         --enable-sync"
 
