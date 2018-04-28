@@ -13,6 +13,8 @@
 #Do not turn these on in Fedora copr!
 %global obs 0
 %global freeworld 0
+#Turn on conditional nacl support
+%global nacl 1
 ### Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 ### Note: These are for Fedora use ONLY.
 ### For your own distribution, please get your own set of keys.
@@ -466,7 +468,12 @@ popd
     snappy \
     yasm \
     zlib
-
+    
+    
+%if %{nacl}
+./build/download_nacl_toolchains.py --packages \
+    nacl_x86_glibc,nacl_x86_newlib,pnacl_newlib,pnacl_translator sync --extract
+ %endif
 
 
 sed -i 's|//third_party/usb_ids|/usr/share/hwdata|g' device/usb/BUILD.gn
@@ -536,7 +543,11 @@ gn_args=(
     enable_hangout_services_extension=false
     enable_widevine=false
 %endif
+%if %{nacl}
+    enable_nacl=true
+%else
     enable_nacl=false
+%endif
     enable_webrtc=true
     fatal_linker_warnings=false
     treat_warnings_as_errors=false
@@ -637,6 +648,12 @@ install -m 644 out/Release/icudtl.dat %{buildroot}%{chromiumdir}/
 %if %{freeworld}
 install -m 755 out/Release/libwidevinecdmadapter.so %{buildroot}%{chromiumdir}/
 %endif
+
+%if %{nacl}
+install -m 755 out/Release/nacl_helper %{buildroot}%{chromiumdir}/
+install -m 755 out/Release/nacl_helper_bootstrap %{buildroot}%{chromiumdir}/
+install -m 644 out/Release/nacl_irt_x86_64.nexe %{buildroot}%{chromiumdir}/
+%endif
 install -m 644 out/Release/natives_blob.bin %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/v8_context_snapshot.bin %{buildroot}%{chromiumdir}/
 install -m 644 out/Release/*.pak %{buildroot}%{chromiumdir}/
@@ -705,6 +722,11 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %{chromiumdir}/chromedriver
 %if !%{with system_libicu}
 %{chromiumdir}/icudtl.dat
+%endif
+%if %{nacl}
+%{chromiumdir}/nacl_helper
+%{chromiumdir}/nacl_helper_bootstrap
+%{chromiumdir}/nacl_irt_x86_64.nexe
 %endif
 %{chromiumdir}/natives_blob.bin
 %{chromiumdir}/v8_context_snapshot.bin
