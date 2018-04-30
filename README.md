@@ -3,7 +3,9 @@ Chromium browser for Fedora Linux with video acceleration patches.
 Installation Instructions
 THIS IS NOT AN OFFICIAL FEDORA BUILD***
 
-ONLY FOR TESTING
+ONLY FOR TESTING[Stable ]
+
+To watch DRM videos, download chrome rpm from http://www.google.com/chrome , extract it and copy the libwidevinecdm.so to /usr/share/chromium-browser
 
 Patches are taken from various sources. I thank them for the contribution.
 
