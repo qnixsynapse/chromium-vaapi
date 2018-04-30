@@ -285,6 +285,11 @@ chmod +x -R llvm-clang/bin/*
 popd
 %endif
 
+#Respect upstream use of python2/3 instead of python in builders. https://fedoraproject.org/wiki/Changes/Avoid_usr_bin_python_in_RPM_Build#Quick_Opt-Out
+%if 0%{?fedora} > 27
+find -type f -exec sed -i '1s=^#!/usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
+%endif
+
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
     base/third_party/dmg_fp \
     base/third_party/dynamic_annotations \
