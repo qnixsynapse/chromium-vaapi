@@ -1,0 +1,23 @@
+diff -upr chromium-48.0.2564.82.orig/third_party/widevine/cdm/stub/widevine_cdm_version.h chromium-48.0.2564.82/third_party/widevine/cdm/stub/widevine_cdm_version.h
+--- chromium-48.0.2564.82.orig/third_party/widevine/cdm/stub/widevine_cdm_version.h	2016-01-14 01:05:17.000000000 +0200
++++ chromium-48.0.2564.82/third_party/widevine/cdm/stub/widevine_cdm_version.h	2016-01-21 19:18:51.287978456 +0200
+@@ -12,4 +12,6 @@
+ 
+ #define WIDEVINE_CDM_AVAILABLE
+ 
++#define WIDEVINE_CDM_VERSION_STRING "67"
++
+ #endif  // WIDEVINE_CDM_VERSION_H_
+ #endif  // WIDEVINE_CDM_VERSION_H_
+ 
+--- a/third_party/widevine/cdm/BUILD.gn
++++ b/third_party/widevine/cdm/BUILD.gn
+@@ -11,7 +11,7 @@ import("//third_party/widevine/cdm/widev
+ # Internal Cast builds set enable_widevine=true to bring in Widevine support.
+ # TODO(xhwang): Support component updated CDM on other platforms and remove this
+ # assert.
+-assert(!enable_widevine || is_win || is_mac || is_chromecast,
++assert(!enable_widevine || is_win || is_mac || is_chromecast || is_linux,
+        "Component updated CDM only supported on Windows and Mac for now.")
+
+ widevine_arch = current_cpu
