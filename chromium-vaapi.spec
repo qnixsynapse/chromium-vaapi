@@ -1,13 +1,3 @@
-# This spec file is based on other spec files, ebuilds, PKGBUILDs available from
-#  [1] https://repos.fedorapeople.org/repos/spot/chromium/
-#  [2] https://copr.fedoraproject.org/coprs/churchyard/chromium-russianfedora-tested/
-#  [3] https://www.archlinux.org/packages/extra/x86_64/chromium/
-#  [4] https://src.fedoraproject.org/rpms/chromium/
-#  [5] https://gitweb.gentoo.org/repo/gentoo.git/tree/www-client/chromium/
-#  [6] https://copr.fedorainfracloud.org/coprs/lantw44/chromium/
-# Get the version number of latest stable version
-# $ curl -s 'https://omahaproxy.appspot.com/all?os=linux&channel=stable' | sed 1d | cut -d , -f 3
-######################################################################################################################
 #Global Libraries
 #Do not turn it on in Fedora copr!
 %global freeworld 1
@@ -457,6 +447,7 @@ gn_args=(
     enable_hangout_services_extension=false
     fatal_linker_warnings=false
     treat_warnings_as_errors=false
+    use_gold=false
     linux_use_bundled_binutils=false
     remove_webcore_debug_symbols=true
     fieldtrial_testing_like_official_build=true
@@ -489,13 +480,13 @@ ninja  %{_smp_mflags} -C %{target}   chrome chrome_sandbox chromedriver
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{chromiumdir}/locales
 mkdir -p %{buildroot}%{_mandir}/man1
-mkdir -p %{buildroot}%{_datadir}/metainfo
+mkdir -p %{buildroot}%{_metainfodir}
 mkdir -p %{buildroot}%{_datadir}/applications
 mkdir -p %{buildroot}%{_datadir}/gnome-control-center/default-apps
 sed -e "s|@@CHROMIUMDIR@@|%{chromiumdir}|" -e "s|@@BUILDTARGET@@|`cat /etc/redhat-release`|" \
     %{SOURCE10} > chromium-vaapi.sh
 install -m 755 chromium-vaapi.sh %{buildroot}%{_bindir}/%{name}
-install -m 644 %{SOURCE11} %{buildroot}%{_datadir}/metainfo
+install -m 644 %{SOURCE11} %{buildroot}%{_metainfodir}
 sed -e "s|@@MENUNAME@@|%{name}|g" -e "s|@@PACKAGE@@|%{name}|g" \
     chrome/app/resources/manpage.1.in > chrome.1
 install -m 644 chrome.1 %{buildroot}%{_mandir}/man1/%{name}.1
@@ -531,13 +522,13 @@ for i in 22 24 32 48 64 128 256; do
 done
 ####################################check##################################################
 %check
-appstream-util validate-relax --nonet "%{buildroot}%{_datadir}/metainfo/%{name}.appdata.xml"
+appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appdata.xml"
 ######################################files################################################
 %files
 %license LICENSE
 %doc AUTHORS 
 %{_bindir}/chromium-vaapi
-%{_datadir}/metainfo/chromium-vaapi.appdata.xml
+%{_metainfodir}/chromium-vaapi.appdata.xml
 %{_datadir}/applications/chromium-vaapi.desktop
 %{_datadir}/gnome-control-center/default-apps/chromium-vaapi.xml
 %{_datadir}/icons/hicolor/16x16/apps/chromium-vaapi.png
@@ -568,6 +559,8 @@ appstream-util validate-relax --nonet "%{buildroot}%{_datadir}/metainfo/%{name}.
 %changelog
 * Thu Oct 11 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 69.0.3497.100-4
 - Rebuild for new libva version on fedora 29+
+- turn off gold linker
+- Use metainfodir for installing metadata
 
 * Fri Sep 28 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 69.0.3497.100-3
 - Remove dependency on minizip-compat package(https://bugzilla.redhat.com/show_bug.cgi?id=1632170)
