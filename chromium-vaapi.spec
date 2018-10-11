@@ -60,7 +60,7 @@
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    69.0.3497.100
-Release:    3%{?dist}
+Release:    4%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -566,6 +566,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_datadir}/metainfo/%{name}.
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Thu Oct 11 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 69.0.3497.100-4
+- Rebuild for new libva version on fedora 29+
+
 * Fri Sep 28 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 69.0.3497.100-3
 - Remove dependency on minizip-compat package(https://bugzilla.redhat.com/show_bug.cgi?id=1632170)
 - Add conditions to build with{out} system minizip
