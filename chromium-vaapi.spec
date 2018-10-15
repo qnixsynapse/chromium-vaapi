@@ -447,7 +447,6 @@ gn_args=(
     enable_hangout_services_extension=false
     fatal_linker_warnings=false
     treat_warnings_as_errors=false
-    use_gold=false
     linux_use_bundled_binutils=false
     remove_webcore_debug_symbols=true
     fieldtrial_testing_like_official_build=true
@@ -559,7 +558,6 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %changelog
 * Thu Oct 11 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 69.0.3497.100-4
 - Rebuild for new libva version on fedora 29+
-- turn off gold linker
 - Use metainfodir for installing metadata
 
 * Fri Sep 28 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 69.0.3497.100-3
