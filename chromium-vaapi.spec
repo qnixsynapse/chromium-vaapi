@@ -46,7 +46,7 @@
 # Allow compiling with clang
 %global clang 0
 #Allow building with Fedora compilation flags
-%global fedora_compilation_flags 1
+%global fedora_compilation_flags 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    69.0.3497.100
@@ -559,6 +559,7 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 * Thu Oct 11 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 69.0.3497.100-4
 - Rebuild for new libva version on fedora 29+
 - Use metainfodir for installing metadata
+- Turn off fedora build flags
 
 * Fri Sep 28 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 69.0.3497.100-3
 - Remove dependency on minizip-compat package(https://bugzilla.redhat.com/show_bug.cgi?id=1632170)
