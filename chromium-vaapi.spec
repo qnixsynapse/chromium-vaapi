@@ -1,13 +1,3 @@
-# This spec file is based on other spec files, ebuilds, PKGBUILDs available from
-#  [1] https://repos.fedorapeople.org/repos/spot/chromium/
-#  [2] https://copr.fedoraproject.org/coprs/churchyard/chromium-russianfedora-tested/
-#  [3] https://www.archlinux.org/packages/extra/x86_64/chromium/
-#  [4] https://src.fedoraproject.org/rpms/chromium/
-#  [5] https://gitweb.gentoo.org/repo/gentoo.git/tree/www-client/chromium/
-#  [6] https://copr.fedorainfracloud.org/coprs/lantw44/chromium/
-# Get the version number of latest stable version
-# $ curl -s 'https://omahaproxy.appspot.com/all?os=linux&channel=stable' | sed 1d | cut -d , -f 3
-######################################################################################################################
 #Global Libraries
 #Do not turn it on in Fedora copr!
 %global freeworld 1
@@ -26,8 +16,8 @@
 %global __requires_exclude %{chromiumdir}/.*\\.so
 %global __provides_exclude_from %{chromiumdir}/.*\\.so
 #######################################CONFIGS###########################################
-# Require harfbuzz >= 1.5.0 for hb_glyph_info_t
-%if 0%{?fedora} >= 28
+#Require harfbuzz >= 1.8.6 for hb_font_funcs_set_glyph_h_advances_func
+%if 0%{?fedora} >= 29
 %bcond_without system_harfbuzz
 %else
 %bcond_with system_harfbuzz
@@ -51,46 +41,86 @@
 %endif
 #Turn on verbose mode
 %global debug_logs 1
-#Build debug packages for debugging
-%global debug_pkg 1
 # Allow compiling with clang
 %global clang 0
+#Allow jumbo builds(turned off by default because it consumes too much memory)
+#enabled by default on rawhide for testing
+#Edit it works
+# Enabled by default
+%global jumbo 1
+#------------------------------------------------------
+%if %{clang}
+#Disable Build debug packages for debugging on clang
+%global debug_pkg 0
+#Disable building with Fedora compilation flags on clang
+%global fedora_compilation_flags 0
+%else
+#Build debug packages for debugging
+%global debug_pkg 1
 #Allow building with Fedora compilation flags
 %global fedora_compilation_flags 1
+%endif
+# Use ld in rawhide as gold is faulty
+%if 0%{?fedora} >= 30
+%global stopgold 1
+%else
+%global stopgold 0
+%endif
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    69.0.3497.100
-Release:    3%{?dist}
+Version:    70.0.3538.67
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
 %if %{freeworld}
 Source0:    https://commondatastorage.googleapis.com/chromium-browser-official/chromium-%{version}.tar.xz
 %else
-Source0:    chromium-%{version}-clean.tar.xz
+# Unfortunately, Fedora & Copr forbids uploading sources with patent-encumbered
+# ffmpeg code even if they are never compiled and linked to target binraies,
+# so we must repackage upstream tarballs to satisfy this requirement. However,
+# we cannot simply delete all code of ffmpeg because this will disable support
+# for some commonly-used free codecs such as Ogg Theora. Instead, helper
+# scripts included in official Fedora packages are copied, modified, and used
+# to automate the repackaging work.
+# Get those helper scripts from https://src.fedoraproject.org/rpms/chromium
+# If you don't use Fedora services, Just set the value of freeworld in this spec fil
+# to 1 to use the upstreanm packaged source.
+# The repackaged source tarball used here is produced by:
+# ./chromium-latest.py --stable --ffmpegclean --ffmpegarm --deleteunrar
+Source0:   chromium-%{version}-clean.tar.xz
 %endif
 # The following two source files are copied and modified from the chromium source
-Source10:   %{name}.sh
-#Add our own appdata file. ##TODO
-Source11:   %{name}.appdata.xml
+Source10:  %{name}.sh
+#Add our own appdata file. 
+Source11:  %{name}.appdata.xml
 #Personal stuff
-Source15:   LICENSE
-#Video acceleration patch from https://chromium-review.googlesource.com/c/chromium/src/+/532294
-Patch1:    vaapi.patch
+Source15:  LICENSE
+# Enable video acceleration on chromium for Linux
+# Enabled video decode acceleration and webrtc encode acceleration(flag disabled by default)
+# Used existing flag instead of creating a new one
+Patch1:    enable-vaapi.patch
+# Enable support for widevine
 Patch2:    widevine.patch
 %if %{clang}
 #Will use any clang patch here
 #Fix breaking builds caused by gcc_ar_wrapper.py from upstream
-Patch7: llvm-arflags.patch
+Patch7:    llvm-arflags.patch
 %else
 #Gcc patches area.
+#Gcc produces way too many warnings. Try to silence some of it.
+Patch8:    silencegcc.patch
+#Fix building with GCC 8
+Patch9:    chromium-gcc8-r588316.patch
+Patch10:   chromium-gcc8-r588547.patch
+Patch11:   chromium-gcc8-r589614.patch
 %endif
-#More patches to fix chromium build here
-#remove dependency on unrar. That's a nasty code.
-Patch50:    unrar.patch
-#Bootstrap still uses python command
-Patch51:    py2-bootstrap.patch
-#This build should be only available to amd64
+# More patches to fix chromium build here
+# remove dependency on unrar. That's a nasty code.
+Patch50:  unrar.patch
+# Bootstrap still uses python command
+Patch51:  py2-bootstrap.patch
+# This build should be only available to amd64
 ExclusiveArch: x86_64
 ########################################################################################
 #Compiler settings
@@ -104,7 +134,7 @@ BuildRequires: gcc-c++
 %endif
 # Basic tools and libraries needed for building
 BuildRequires: ninja-build, nodejs, bison, gperf, hwdata
-BuildRequires: libgcc, glibc, libatomic, libstdc++-static
+BuildRequires: libgcc, glibc, libatomic
 BuildRequires: libcap-devel, cups-devel, alsa-lib-devel
 BuildRequires: mesa-libGL-devel, mesa-libEGL-devel
 %if %{with system_minizip}
@@ -195,6 +225,7 @@ find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env p
     net/third_party/nss \
     net/third_party/quic \
     net/third_party/spdy \
+    net/third_party/uri_template \
     third_party/abseil-cpp \
     third_party/adobe \
     third_party/analytics \
@@ -223,6 +254,7 @@ find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env p
     third_party/catapult/common/py_vulcanize/third_party/rcssmin \
     third_party/catapult/common/py_vulcanize/third_party/rjsmin \
     third_party/catapult/third_party/polymer \
+    third_party/catapult/third_party/six \
     third_party/catapult/tracing/third_party/d3 \
     third_party/catapult/tracing/third_party/gl-matrix \
     third_party/catapult/tracing/third_party/jszip \
@@ -262,6 +294,8 @@ find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env p
     third_party/leveldatabase \
     third_party/libaddressinput \
     third_party/libaom \
+    third_party/libaom/source/libaom/third_party/vector \
+    third_party/libaom/source/libaom/third_party/x86inc \
     third_party/libjingle \
     third_party/libphonenumber \
     third_party/libsecret \
@@ -336,6 +370,13 @@ find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env p
     third_party/webdriver \
     third_party/WebKit \
     third_party/webrtc \
+    third_party/webrtc/common_audio/third_party/fft4g \
+    third_party/webrtc/common_audio/third_party/spl_sqrt_floor \
+    third_party/webrtc/modules/third_party/fft \
+    third_party/webrtc/modules/third_party/g711 \
+    third_party/webrtc/modules/third_party/g722 \
+    third_party/webrtc/rtc_base/third_party/base64 \
+    third_party/webrtc/rtc_base/third_party/sigslot \
     third_party/widevine \
     third_party/woff2 \
     third_party/xdg-utils \
@@ -346,10 +387,10 @@ find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env p
 %endif
     tools/gn/base/third_party/icu \
     url/third_party/mozilla \
-    v8/third_party/antlr4 \
     v8/src/third_party/valgrind \
     v8/src/third_party/utf8-decoder \
-    v8/third_party/inspector_protocol
+    v8/third_party/inspector_protocol \
+    v8/third_party/v8
 
 ./build/linux/unbundle/replace_gn_files.py --system-libraries \
     flac \
@@ -376,15 +417,12 @@ find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env p
 %if %{with system_minizip}
     zlib
 %endif
-    
 
 sed -i 's|//third_party/usb_ids|/usr/share/hwdata|g' device/usb/BUILD.gn
-%if %{clang}
-# Remove compiler flags not supported by our system clang
-  sed -i \
-    -e '/"-Wno-ignored-pragma-optimize"/d' \
-    build/config/compiler/BUILD.gn
-%endif
+
+# Don't use static libstdc++
+sed -i '/-static-libstdc++/d' tools/gn/build/gen.py
+
 rmdir third_party/markupsafe
 ln -s %{python2_sitearch}/markupsafe third_party/markupsafe
 %if %{with system_ply}
@@ -396,7 +434,7 @@ mkdir -p third_party/node/linux/node-linux-x64/bin
 ln -s %{_bindir}/node third_party/node/linux/node-linux-x64/bin/node
 # Hard code extra version
 FILE=chrome/common/channel_info_posix.cc
-sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"Chromium(vaapi) Fedora Project"/' $FILE
+sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"chromium-vaapi Fedora Project"/' $FILE
 #####################################BUILD#############################################
 %build
 #export compilar variables
@@ -407,28 +445,28 @@ export CC=clang CXX=clang++
 export AR=ar NM=nm
 export CC=gcc CXX=g++
 %if %{fedora_compilation_flags}
-#Build falgs to make hardened binaries
-#Remove some flags which can create conflicts with chromium gyp flags. 
-export CFLAGS="$(echo '%{__global_cflags}' |sed -e 's/-fexceptions//' \
-                                                -e 's/-Werror=format-security//' \
-                                                -e 's/-pipe//' \
-                                                -e 's/-g/-g1/g' \
-                                                -e 's/-g1record-g1cc-switches//' )"
-export CXXFLAGS="$(echo '%{?__global_cxxflags}%{!?__global_cxxflags:%{__global_cflags}}' | sed -e 's/-fexceptions//' \
-                                                                                               -e 's/-Werror=format-security//' \
-                                                                                               -e 's/-pipe//' \
-                                                                                               -e 's/-g/-g1/g' \
-                                                                                               -e 's/-g1record-g1cc-switches//' )"
-
+#Build flags to make hardened binaries
+#Remove some flags which are incompatible with chromium code. 
+CBUILDFLAGS="$(echo '%{__global_cflags}' | sed -e 's/-fexceptions//' \
+                                               -e 's/-Werror=format-security//' \
+                                               -e 's/-pipe//' \
+                                               -e 's/-g1record-g1cc-switches//' \
+                                               -e 's/^-g / /g' -e 's/ -g / /g' -e 's/ -g$//g')"
+CXXBUILDFLAGS="$(echo '%{?__global_cxxflags}%{!?__global_cxxflags:%{__global_cflags}}' | sed -e 's/-fexceptions//' \
+                                                                                            -e 's/-Werror=format-security//' \
+                                                                                            -e 's/-pipe//' \
+                                                                                            -e 's/-g1record-g1cc-switches//' \
+                                                                                            -e 's/^-g / /g' -e 's/ -g / /g' -e 's/ -g$//g')"   
+export CFLAGS="${CBUILDFLAGS}"
+export CXXFLAGS="${CXXBUILDFLAGS} -fpermissive"
 export LDFLAGS='%{__global_ldflags}'
 %else
-export CXXFLAGS=$CXXFLAGS" -fno-delete-null-pointer-checks"
+export CXXFLAGS=$CXXFLAGS" -fpermissive"
 %endif
 %endif
 gn_args=(
     is_debug=false
     use_vaapi=true
-    use_gtk3=true
     enable_swiftshader=false
     is_component_build=false
     use_sysroot=false
@@ -441,6 +479,7 @@ gn_args=(
     use_kerberos=true
     use_libpci=true
     use_pulseaudio=true
+    link_pulseaudio=true
     use_system_freetype=true
     enable_widevine=true
 %if %{with system_harfbuzz}
@@ -466,6 +505,7 @@ gn_args=(
     'google_default_client_id="%{default_client_id}"'
     'google_default_client_secret="%{default_client_secret}"'
 )
+# Gold is faulty on rawhide so disabled it.
 gn_args+=(
 %if %{clang}
     is_clang=true
@@ -474,9 +514,25 @@ gn_args+=(
 %else
     is_clang=false
     use_lld=false
+%if %{stopgold} 
+    use_gold=false
+%endif
 %endif
 )
-
+#Jumbo stuff
+gn_args+=(
+%if %{jumbo}
+    use_jumbo_build=true
+    jumbo_file_merge_limit=12
+    concurrent_links=1
+%endif
+)
+#symbol
+gn_args+=(
+%if %{debug_pkg}
+    symbol_level=1
+%endif
+)
 tools/gn/bootstrap/bootstrap.py  --gn-gen-args "${gn_args[*]}"
 %{target}/gn --script-executable=%{__python2} gen --args="${gn_args[*]}" %{target}
 %if %{debug_logs}
@@ -489,13 +545,13 @@ ninja  %{_smp_mflags} -C %{target}   chrome chrome_sandbox chromedriver
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{chromiumdir}/locales
 mkdir -p %{buildroot}%{_mandir}/man1
-mkdir -p %{buildroot}%{_datadir}/metainfo
+mkdir -p %{buildroot}%{_metainfodir}
 mkdir -p %{buildroot}%{_datadir}/applications
 mkdir -p %{buildroot}%{_datadir}/gnome-control-center/default-apps
 sed -e "s|@@CHROMIUMDIR@@|%{chromiumdir}|" -e "s|@@BUILDTARGET@@|`cat /etc/redhat-release`|" \
     %{SOURCE10} > chromium-vaapi.sh
 install -m 755 chromium-vaapi.sh %{buildroot}%{_bindir}/%{name}
-install -m 644 %{SOURCE11} %{buildroot}%{_datadir}/metainfo
+install -m 644 %{SOURCE11} %{buildroot}%{_metainfodir}
 sed -e "s|@@MENUNAME@@|%{name}|g" -e "s|@@PACKAGE@@|%{name}|g" \
     chrome/app/resources/manpage.1.in > chrome.1
 install -m 644 chrome.1 %{buildroot}%{_mandir}/man1/%{name}.1
@@ -531,13 +587,13 @@ for i in 22 24 32 48 64 128 256; do
 done
 ####################################check##################################################
 %check
-appstream-util validate-relax --nonet "%{buildroot}%{_datadir}/metainfo/%{name}.appdata.xml"
+appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appdata.xml"
 ######################################files################################################
 %files
 %license LICENSE
 %doc AUTHORS 
 %{_bindir}/chromium-vaapi
-%{_datadir}/metainfo/chromium-vaapi.appdata.xml
+%{_metainfodir}/chromium-vaapi.appdata.xml
 %{_datadir}/applications/chromium-vaapi.desktop
 %{_datadir}/gnome-control-center/default-apps/chromium-vaapi.xml
 %{_datadir}/icons/hicolor/16x16/apps/chromium-vaapi.png
@@ -566,6 +622,22 @@ appstream-util validate-relax --nonet "%{buildroot}%{_datadir}/metainfo/%{name}.
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Wed Oct 17 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.67-1
+- Update to 70.0.3538.67
+- brand new vaapi patch 
+- Add few patches to fix gcc
+- turned on support for jumbo builds by default across all branches
+- Added -fpermissive flag as requirement
+
+* Fri Oct 12 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 69.0.3497.100-5
+- turned of gold in rawhide as it crashes with fedora flags
+- spec cleanup
+- Minor appdata typo fix
+
+* Thu Oct 11 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 69.0.3497.100-4
+- Rebuild for new libva version on fedora 29+
+- Use metainfodir for installing metadata
+
 * Fri Sep 28 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 69.0.3497.100-3
 - Remove dependency on minizip-compat package(https://bugzilla.redhat.com/show_bug.cgi?id=1632170)
 - Add conditions to build with{out} system minizip
