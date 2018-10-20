@@ -45,9 +45,7 @@
 %global clang 0
 #Allow jumbo builds(turned off by default because it consumes too much memory)
 #enabled by default on rawhide for testing
-#Edit it works
-# Enabled by default
-%global jumbo 1
+%global jumbo 0
 #------------------------------------------------------
 %if %{clang}
 #Disable Build debug packages for debugging on clang
