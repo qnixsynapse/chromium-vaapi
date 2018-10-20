@@ -50,11 +50,7 @@ CHROMIUM_DISTRO_FLAGS=" --enable-plugins \
                         --enable-extensions \
                         --enable-user-scripts \
                         --enable-printing \
-		        --enable-accelerated-video \
-                        --enable-native-gpu-memory-buffers \
-                        --enable-accelerated-mjpeg-decode \
                         --enable-gpu-rasterization \
-                        --disable-gpu-driver-bug-workarounds \
                         --enable-sync"
 
 exec -a "$0" "@@CHROMIUMDIR@@/$(basename "$0" | sed 's/\.sh$//')" $CHROMIUM_DISTRO_FLAGS "$@"
