@@ -69,7 +69,7 @@
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    70.0.3538.67
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -523,7 +523,7 @@ gn_args+=(
 gn_args+=(
 %if %{jumbo}
     use_jumbo_build=true
-    jumbo_file_merge_limit=12
+    jumbo_file_merge_limit=7
     concurrent_links=1
 %endif
 )
@@ -622,6 +622,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Sun Oct 21 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.67-2
+- Reduce jumbo_file_merge_limit to a much lower number since rpmfusion koji can't keep up.
+
 * Wed Oct 17 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.67-1
 - Update to 70.0.3538.67
 - brand new vaapi patch 
