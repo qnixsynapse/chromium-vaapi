@@ -29,7 +29,8 @@
 %bcond_without system_ply
 
 # Allow testing whether icu can be unbundled
-%bcond_with system_libicu
+# A patch fix building so enabled by default
+%bcond_without system_libicu
 # Allow testing whether libvpx can be unbundled
 %bcond_with system_libvpx
 #Allow minizip to be unbundled
@@ -45,7 +46,9 @@
 %global clang 0
 #Allow jumbo builds(turned off by default because it consumes too much memory)
 #enabled by default on rawhide for testing
-%global jumbo 0
+#Edit it works
+# Enabled by default
+%global jumbo 1
 #------------------------------------------------------
 %if %{clang}
 #Disable Build debug packages for debugging on clang
@@ -66,7 +69,7 @@
 %endif
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    70.0.3538.67
+Version:    70.0.3538.77
 Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
@@ -118,6 +121,8 @@ Patch11:   chromium-gcc8-r589614.patch
 Patch50:  unrar.patch
 # Bootstrap still uses python command
 Patch51:  py2-bootstrap.patch
+# Fix building with system icu
+Patch52:  chromium-system-icu.patch
 # This build should be only available to amd64
 ExclusiveArch: x86_64
 ########################################################################################
@@ -521,7 +526,7 @@ gn_args+=(
 gn_args+=(
 %if %{jumbo}
     use_jumbo_build=true
-    jumbo_file_merge_limit=12
+    jumbo_file_merge_limit=7
     concurrent_links=1
 %endif
 )
@@ -620,6 +625,13 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Fri Oct 26 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.77-1
+- Update to 70.0.3538.77
+- Add a patch to fix building with system libicu
+
+* Sun Oct 21 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.67-2
+- Reduce jumbo_file_merge_limit to a much lower number since rpmfusion koji can't keep up.
+
 * Wed Oct 17 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.67-1
 - Update to 70.0.3538.67
 - brand new vaapi patch 
