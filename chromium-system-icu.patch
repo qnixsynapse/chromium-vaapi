@@ -1,0 +1,11 @@
+--- chromium-70.0.3521.2.old/third_party/blink/renderer/platform/text/character_property_data_generator.h	2018-08-15 12:41:21.091987662 +0200
++++ chromium-70.0.3521.2/third_party/blink/renderer/platform/text/character_property_data_generator.h	2018-08-17 12:37:45.459538308 +0200
+@@ -247,7 +247,7 @@
+     0xFFA0, 0xFFDC,
+ };
+ 
+-static const UChar32 kIsHangulArray[] = {};
++static const UChar32 kIsHangulArray[] = {0xFFDC,};
+ 
+ }  // namespace blink
+ 
