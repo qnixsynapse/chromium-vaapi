@@ -70,7 +70,7 @@
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    70.0.3538.77
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -123,6 +123,12 @@ Patch50:  unrar.patch
 Patch51:  py2-bootstrap.patch
 # Fix building with system icu
 Patch52:  chromium-system-icu.patch
+%if 0%{?fedora} >= 30
+# Fix chromium build with harfbuzz 2 in rawhide
+Patch53:  chromium-harfbuzz2.patch
+%endif
+# Let's brand chromium!
+Patch54:  brand.patch
 # This build should be only available to amd64
 ExclusiveArch: x86_64
 ########################################################################################
@@ -437,7 +443,7 @@ mkdir -p third_party/node/linux/node-linux-x64/bin
 ln -s %{_bindir}/node third_party/node/linux/node-linux-x64/bin/node
 # Hard code extra version
 FILE=chrome/common/channel_info_posix.cc
-sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"chromium-vaapi Fedora Project"/' $FILE
+sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"chromium-vaapi"/' $FILE
 #####################################BUILD#############################################
 %build
 #export compilar variables
@@ -625,6 +631,10 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Wed Nov 07 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.77-2
+- Use correct branding in chromium
+- update vaapi patch
+
 * Fri Oct 26 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.77-1
 - Update to 70.0.3538.77
 - Add a patch to fix building with system libicu
