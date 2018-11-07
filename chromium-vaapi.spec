@@ -70,7 +70,7 @@
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    70.0.3538.77
-Release:    3%{?dist}
+Release:    4%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -103,11 +103,9 @@ Source15:  LICENSE
 Patch1:    enable-vaapi.patch
 # Enable support for widevine
 Patch2:    widevine.patch
-%if %{clang}
 #Will use any clang patch here
 #Fix breaking builds caused by gcc_ar_wrapper.py from upstream
 Patch7:    llvm-arflags.patch
-%else
 #Gcc patches area.
 #Gcc produces way too many warnings. Try to silence some of it.
 Patch8:    silencegcc.patch
@@ -115,7 +113,6 @@ Patch8:    silencegcc.patch
 Patch9:    chromium-gcc8-r588316.patch
 Patch10:   chromium-gcc8-r588547.patch
 Patch11:   chromium-gcc8-r589614.patch
-%endif
 # More patches to fix chromium build here
 # remove dependency on unrar. That's a nasty code.
 Patch50:  unrar.patch
@@ -123,10 +120,8 @@ Patch50:  unrar.patch
 Patch51:  py2-bootstrap.patch
 # Fix building with system icu
 Patch52:  chromium-system-icu.patch
-%if 0%{?fedora} >= 30
 # Fix chromium build with harfbuzz 2 in rawhide
 Patch53:  chromium-harfbuzz2.patch
-%endif
 # Let's brand chromium!
 Patch54:  brand.patch
 # This build should be only available to amd64
@@ -209,7 +204,25 @@ Recommends:    libva-intel-driver%{?_isa}
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
 %prep
-%autosetup -n chromium-%{version} -p1
+%setup -q -n chromium-%{version} 
+## Apply patches here ##
+%patch1 -p1 -b .vaapi
+%patch2 -p1 -b .widevine
+%if %{clang}
+%patch7 -p1 -b .llvmarflags
+%else
+%patch8 -p1 -b .silencegcc
+%patch9 -p1 -b .r588316
+%patch10 -p1 -b .r588547
+%patch11 -p1 -b .r589614
+%endif
+%patch50 -p1 -b .unrar
+%patch51 -p1 -b .py2boot
+%patch52 -p1 -b .icu
+%if 0%{?fedora} >= 30
+%patch53 -p1 -b .harfbuzz2
+%endif
+%patch54 -p1 -b .brand
 #Let's change the default shebang of python files.
 find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
@@ -631,6 +644,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Wed Nov 07 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.77-4
+- Replace %%autosetup with %%setup and fix spec file because applying condition on patch defines is wrong.
+
 * Wed Nov 07 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.77-3
 - Add a patch to fix building on rawhide with harfbuzz2
 
