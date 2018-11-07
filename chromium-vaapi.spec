@@ -70,7 +70,7 @@
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    70.0.3538.77
-Release:    2%{?dist}
+Release:    3%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -631,7 +631,10 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
-* Wed Nov 07 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.77-2
+* Wed Nov 07 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.77-3
+- Add a patch to fix building on rawhide with harfbuzz2
+
+* Tue Nov 06 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.77-2
 - Use correct branding in chromium
 - update vaapi patch
 
