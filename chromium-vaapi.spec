@@ -69,8 +69,8 @@
 %endif
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    70.0.3538.77
-Release:    4%{?dist}
+Version:    70.0.3538.102
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -644,6 +644,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Wed Nov 14 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.102-1
+- Update to 70.0.3538.102
+
 * Wed Nov 07 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.77-4
 - Replace %%autosetup with %%setup and fix spec file because applying condition on patch defines is wrong.
 
