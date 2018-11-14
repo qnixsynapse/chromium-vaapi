@@ -70,7 +70,7 @@
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    70.0.3538.102
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -124,6 +124,8 @@ Patch52:  chromium-system-icu.patch
 Patch53:  chromium-harfbuzz2.patch
 # Let's brand chromium!
 Patch54:  brand.patch
+# Disable sysroot related settings
+Patch55:  chromium-gn-r607596.patch
 # This build should be only available to amd64
 ExclusiveArch: x86_64
 ########################################################################################
@@ -223,6 +225,7 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch53 -p1 -b .harfbuzz2
 %endif
 %patch54 -p1 -b .brand
+%patch55 -p1 -b .gn
 #Let's change the default shebang of python files.
 find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
@@ -644,6 +647,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Thu Nov 15 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.102-2
+- Add a patch from upstream to remove sysroot-related options from gn bootstrap
+
 * Wed Nov 14 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.102-1
 - Update to 70.0.3538.102
 
