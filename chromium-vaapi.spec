@@ -69,8 +69,8 @@
 %endif
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    70.0.3538.102
-Release:    2%{?dist}
+Version:    70.0.3538.110
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -98,8 +98,6 @@ Source11:  %{name}.appdata.xml
 #Personal stuff
 Source15:  LICENSE
 # Enable video acceleration on chromium for Linux
-# Enabled video decode acceleration and webrtc encode acceleration(flag disabled by default)
-# Used existing flag instead of creating a new one
 Patch1:    enable-vaapi.patch
 # Enable support for widevine
 Patch2:    widevine.patch
@@ -647,6 +645,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Mon Nov 26 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.110-1
+-  Update to 70.0.3538.110
+
 * Thu Nov 15 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.102-2
 - Add a patch from upstream to remove sysroot-related options from gn bootstrap
 
