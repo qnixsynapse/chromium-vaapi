@@ -76,7 +76,7 @@
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    71.0.3578.80
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -580,7 +580,7 @@ gn_args+=(
 gn_args+=(
 %if %{jumbo}
     use_jumbo_build=true
-    jumbo_file_merge_limit=7
+    jumbo_file_merge_limit=5
     concurrent_links=1
 %endif
 )
@@ -692,6 +692,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Tue Dec 11 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 71.0.3578.80-2
+- Reduce value of jumbo_file_merge_limit even more to avoid OOMs on builders
+
 * Thu Dec 06 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 71.0.3578.80-1
 - Update to 71.0.3578.80
 - Add a patch to fix libva version mismatch error 
