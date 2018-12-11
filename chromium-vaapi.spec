@@ -16,6 +16,9 @@
 %global __requires_exclude %{chromiumdir}/.*\\.so
 %global __provides_exclude_from %{chromiumdir}/.*\\.so
 #######################################CONFIGS###########################################
+# This package depends on automagic byte compilation            
+# https://fedoraproject.org/wiki/Changes/No_more_automagic_Python_bytecompilation_phase_2            
+%global _python_bytecompile_extra 1
 #Require harfbuzz >= 1.8.6 for hb_font_funcs_set_glyph_h_advances_func
 %if 0%{?fedora} >= 29
 %bcond_without system_harfbuzz
@@ -40,13 +43,14 @@
 %else
 %bcond_without system_minizip
 %endif
+# Need re2 ver. 2016.07.21 for re2::LazyRE2 
+%bcond_with system_re2
+
 #Turn on verbose mode
 %global debug_logs 1
 # Allow compiling with clang
 %global clang 0
-#Allow jumbo builds(turned off by default because it consumes too much memory)
-#enabled by default on rawhide for testing
-#Edit it works
+#Allow jumbo builds
 # Enabled by default
 %global jumbo 1
 #------------------------------------------------------
@@ -67,9 +71,11 @@
 %else
 %global stopgold 0
 %endif
+# Enable building with ozone support
+%global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    70.0.3538.110
+Version:    71.0.3578.80
 Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
@@ -85,7 +91,7 @@ Source0:    https://commondatastorage.googleapis.com/chromium-browser-official/c
 # scripts included in official Fedora packages are copied, modified, and used
 # to automate the repackaging work.
 # Get those helper scripts from https://src.fedoraproject.org/rpms/chromium
-# If you don't use Fedora services, Just set the value of freeworld in this spec fil
+# If you don't use Fedora services, Just set the value of freeworld in this spec file
 # to 1 to use the upstreanm packaged source.
 # The repackaged source tarball used here is produced by:
 # ./chromium-latest.py --stable --ffmpegclean --ffmpegarm --deleteunrar
@@ -97,35 +103,7 @@ Source10:  %{name}.sh
 Source11:  %{name}.appdata.xml
 #Personal stuff
 Source15:  LICENSE
-# Enable video acceleration on chromium for Linux
-Patch1:    enable-vaapi.patch
-# Enable support for widevine
-Patch2:    widevine.patch
-#Will use any clang patch here
-#Fix breaking builds caused by gcc_ar_wrapper.py from upstream
-Patch7:    llvm-arflags.patch
-#Gcc patches area.
-#Gcc produces way too many warnings. Try to silence some of it.
-Patch8:    silencegcc.patch
-#Fix building with GCC 8
-Patch9:    chromium-gcc8-r588316.patch
-Patch10:   chromium-gcc8-r588547.patch
-Patch11:   chromium-gcc8-r589614.patch
-# More patches to fix chromium build here
-# remove dependency on unrar. That's a nasty code.
-Patch50:  unrar.patch
-# Bootstrap still uses python command
-Patch51:  py2-bootstrap.patch
-# Fix building with system icu
-Patch52:  chromium-system-icu.patch
-# Fix chromium build with harfbuzz 2 in rawhide
-Patch53:  chromium-harfbuzz2.patch
-# Let's brand chromium!
-Patch54:  brand.patch
-# Disable sysroot related settings
-Patch55:  chromium-gn-r607596.patch
-# This build should be only available to amd64
-ExclusiveArch: x86_64
+
 ########################################################################################
 #Compiler settings
 %if %{clang}	
@@ -153,8 +131,13 @@ BuildRequires: pkgconfig(libffi)
 # remove_bundled_libraries.py --do-remove
 BuildRequires: python2-rpm-macros
 BuildRequires: python2-beautifulsoup4
+BuildRequires: python2-lxml
 BuildRequires: python2-html5lib
 BuildRequires: python2-markupsafe
+Buildrequires: python2-six
+%if %{with system_re2}
+BuildRequires: re2-devel
+%endif
 %if %{with system_ply}
 BuildRequires: python2-ply
 %endif
@@ -180,7 +163,6 @@ BuildRequires: pkgconfig(libxml-2.0)
 %endif
 BuildRequires: pkgconfig(libxslt)
 BuildRequires: opus-devel
-BuildRequires: re2-devel
 BuildRequires: snappy-devel
 BuildRequires: yasm
 BuildRequires: pciutils-devel
@@ -200,6 +182,42 @@ Recommends:    libva-intel-driver%{?_isa}
 %if !%{debug_pkg}
 %global debug_package %{nil}
 %endif
+# This build should be only available to amd64
+ExclusiveArch: x86_64
+# Define Patches here ##
+# Enable video acceleration on chromium for Linux
+Patch1:    enable-vaapi.patch
+# Enable support for widevine
+Patch2:    widevine.patch
+#Will use any clang patch here
+Patch3:    ccompiler.patch
+#Fix breaking builds caused by gcc_ar_wrapper.py from upstream
+Patch7:    llvm-arflags.patch
+#Gcc patches area.
+#Gcc produces way too many warnings. Try to silence some of it.
+Patch8:    silencegcc.patch
+#Fix building with GCC 8
+Patch9:    chromium-71-gcc-fix.patch
+# More patches to fix chromium build here
+# remove dependency on unrar. That's a nasty code.
+Patch50:  nounrar.patch
+# Bootstrap still uses python command
+Patch51:  py2-bootstrap.patch
+# Fix building with system icu
+Patch52:  chromium-system-icu.patch
+# Fix chromium build with harfbuzz 2 in rawhide
+Patch53:  chromium-harfbuzz2.patch
+# Let's brand chromium!
+Patch54:  brand.patch
+# Disable sysroot related settings
+Patch55:  chromium-gn-r607596.patch
+# Since the newer versions of VA-API are ABI compatible, relax the version checks for VA-API, by using VA_CHECK_VERSION().
+# This will help in updating the libva to the latest releases,while still supporting the old versions, till the new version of
+# libva is merged and picked by the builds. Thus ensuring that hardware acceleration is not broken while updating the libva.
+# Taken and rebased from https://chromium-review.googlesource.com/c/chromium/src/+/1352519
+# The patch might land somewhere in the future and will be removed.
+Patch56: relax-libva-version.patch
+
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
@@ -209,23 +227,25 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch1 -p1 -b .vaapi
 %patch2 -p1 -b .widevine
 %if %{clang}
+%patch3 -p1 -b .cc
 %patch7 -p1 -b .llvmarflags
 %else
 %patch8 -p1 -b .silencegcc
-%patch9 -p1 -b .r588316
-%patch10 -p1 -b .r588547
-%patch11 -p1 -b .r589614
+%patch9 -p1 -b .gcc
 %endif
-%patch50 -p1 -b .unrar
+%patch50 -p1 -b .nounrar
 %patch51 -p1 -b .py2boot
 %patch52 -p1 -b .icu
 %if 0%{?fedora} >= 30
 %patch53 -p1 -b .harfbuzz2
 %endif
+%if %{freeworld}
 %patch54 -p1 -b .brand
+%endif
 %patch55 -p1 -b .gn
+%patch56 -p1 -b .relaxva
 #Let's change the default shebang of python files.
-find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
+find -depth -type f -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
    base/third_party/dmg_fp \
     base/third_party/dynamic_annotations \
@@ -312,6 +332,7 @@ find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env p
 %endif
     third_party/inspector_protocol \
     third_party/jinja2 \
+    third_party/jsoncpp \
     third_party/jstemplate \
     third_party/khronos \
     third_party/leveldatabase \
@@ -341,6 +362,9 @@ find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env p
     third_party/lzma_sdk \
     third_party/mesa \
     third_party/metrics_proto \
+%if %{ozone}
+    third_party/minigbm \
+%endif
 %if !%{with system_minizip}
     third_party/minizip/ \
 %endif
@@ -369,6 +393,9 @@ find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env p
     third_party/protobuf/third_party/six \
     third_party/pyjson5 \
     third_party/qcms \
+%if !%{with system_re2}
+    third_party/re2 \
+%endif
     third_party/rnnoise \
     third_party/s2cellid \
     third_party/sfntly \
@@ -379,6 +406,7 @@ find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env p
     third_party/smhasher \
     third_party/speech-dispatcher \
     third_party/spirv-headers \
+    third_party/SPIRV-Tools \
     third_party/spirv-tools-angle \
     third_party/sqlite \
     third_party/swiftshader \
@@ -389,6 +417,9 @@ find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env p
     third_party/usrsctp \
     third_party/vulkan \
     third_party/vulkan-validation-layers \
+%if %{ozone}
+    third_party/wayland \
+%endif
     third_party/web-animations-js \
     third_party/webdriver \
     third_party/WebKit \
@@ -434,7 +465,9 @@ find -depth -type f -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env p
 %endif
     libxslt \
     opus \
+%if %{with system_re2}
     re2 \
+%endif
     snappy \
     yasm \
 %if %{with system_minizip}
@@ -448,6 +481,7 @@ sed -i '/-static-libstdc++/d' tools/gn/build/gen.py
 
 rmdir third_party/markupsafe
 ln -s %{python2_sitearch}/markupsafe third_party/markupsafe
+
 %if %{with system_ply}
 rmdir third_party/ply
 ln -s %{python2_sitelib}/ply third_party/ply
@@ -476,10 +510,10 @@ CBUILDFLAGS="$(echo '%{__global_cflags}' | sed -e 's/-fexceptions//' \
                                                -e 's/-g1record-g1cc-switches//' \
                                                -e 's/^-g / /g' -e 's/ -g / /g' -e 's/ -g$//g')"
 CXXBUILDFLAGS="$(echo '%{?__global_cxxflags}%{!?__global_cxxflags:%{__global_cflags}}' | sed -e 's/-fexceptions//' \
-                                                                                            -e 's/-Werror=format-security//' \
-                                                                                            -e 's/-pipe//' \
-                                                                                            -e 's/-g1record-g1cc-switches//' \
-                                                                                            -e 's/^-g / /g' -e 's/ -g / /g' -e 's/ -g$//g')"   
+                                                                                             -e 's/-Werror=format-security//' \
+                                                                                             -e 's/-pipe//' \
+                                                                                             -e 's/-g1record-g1cc-switches//' \
+                                                                                             -e 's/^-g / /g' -e 's/ -g / /g' -e 's/ -g$//g')"   
 export CFLAGS="${CBUILDFLAGS}"
 export CXXFLAGS="${CXXBUILDFLAGS} -fpermissive"
 export LDFLAGS='%{__global_ldflags}'
@@ -490,9 +524,9 @@ export CXXFLAGS=$CXXFLAGS" -fpermissive"
 gn_args=(
     is_debug=false
     use_vaapi=true
-    enable_swiftshader=false
     is_component_build=false
     use_sysroot=false
+    enable_swiftshader=false
     use_custom_libcxx=false
     use_aura=true
     'system_libdir="%{_lib}"'
@@ -550,6 +584,19 @@ gn_args+=(
     concurrent_links=1
 %endif
 )
+
+
+# Ozone stuff
+gn_args+=(
+%if %{ozone}
+    use_ozone=true
+    ozone_auto_platforms=true 
+    ozone_platform_wayland=true 
+    use_xkbcommon=true
+%endif
+)
+
+
 #symbol
 gn_args+=(
 %if %{debug_pkg}
@@ -645,8 +692,15 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Thu Dec 06 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 71.0.3578.80-1
+- Update to 71.0.3578.80
+- Add a patch to fix libva version mismatch error 
+- Re bundle re2 as it's ancient on Fedora
+- Enable experimental support for wayland-ozone in the spec file (WIP; disabled by default)
+- Bring patch definitions closer to %%prep so to find and apply patches easier.
+
 * Mon Nov 26 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.110-1
--  Update to 70.0.3538.110
+- Update to 70.0.3538.110
 
 * Thu Nov 15 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 70.0.3538.102-2
 - Add a patch from upstream to remove sysroot-related options from gn bootstrap

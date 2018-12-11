@@ -1,8 +1,23 @@
+From 136a79606fb83485e6c10257bb2e970d306c6f5f Mon Sep 17 00:00:00 2001
+From: Akarshan Biswas <biswasab@akarshans-desk.biswasab.org>
+Date: Thu, 6 Dec 2018 12:53:47 +0530
+Subject: [PATCH] Don't use unrar
+
+---
+ .../check_client_download_request.cc          | 69 -------------------
+ .../check_client_download_request.h           |  1 -
+ chrome/common/safe_browsing/BUILD.gn          |  2 -
+ chrome/services/file_util/public/cpp/BUILD.gn |  3 -
+ .../public/mojom/safe_archive_analyzer.mojom  |  5 --
+ .../file_util/safe_archive_analyzer.cc        |  9 ---
+ .../file_util/safe_archive_analyzer.h         |  2 -
+ 7 files changed, 91 deletions(-)
+
 diff --git a/chrome/browser/safe_browsing/download_protection/check_client_download_request.cc b/chrome/browser/safe_browsing/download_protection/check_client_download_request.cc
-index f5aaff83c87a..737e168ec5aa 100644
+index d1413bb1d..ec337e92c 100644
 --- a/chrome/browser/safe_browsing/download_protection/check_client_download_request.cc
 +++ b/chrome/browser/safe_browsing/download_protection/check_client_download_request.cc
-@@ -379,10 +379,6 @@ void CheckClientDownloadRequest::AnalyzeFile() {
+@@ -380,10 +380,6 @@ void CheckClientDownloadRequest::AnalyzeFile() {
    // are enabled.
    if (item_->GetTargetFilePath().MatchesExtension(FILE_PATH_LITERAL(".zip"))) {
      StartExtractZipFeatures();
@@ -13,7 +28,7 @@ index f5aaff83c87a..737e168ec5aa 100644
  #if defined(OS_MACOSX)
    } else if (item_->GetTargetFilePath().MatchesExtension(
                   FILE_PATH_LITERAL(".dmg")) ||
-@@ -499,71 +495,6 @@ void CheckClientDownloadRequest::ExtractFileFeatures(
+@@ -500,71 +496,6 @@ void CheckClientDownloadRequest::ExtractFileFeatures(
    OnFileFeatureExtractionDone();
  }
  
@@ -86,7 +101,7 @@ index f5aaff83c87a..737e168ec5aa 100644
    DCHECK_CURRENTLY_ON(BrowserThread::UI);
    DCHECK(item_);  // Called directly from Start(), item should still exist.
 diff --git a/chrome/browser/safe_browsing/download_protection/check_client_download_request.h b/chrome/browser/safe_browsing/download_protection/check_client_download_request.h
-index 9042d5d589ab..1c50dcff4312 100644
+index ae0f6fbe4..b74dde031 100644
 --- a/chrome/browser/safe_browsing/download_protection/check_client_download_request.h
 +++ b/chrome/browser/safe_browsing/download_protection/check_client_download_request.h
 @@ -148,7 +148,6 @@ class CheckClientDownloadRequest
@@ -98,7 +113,7 @@ index 9042d5d589ab..1c50dcff4312 100644
    base::TimeTicks rar_analysis_start_time_;
    base::TimeTicks zip_analysis_start_time_;
 diff --git a/chrome/common/safe_browsing/BUILD.gn b/chrome/common/safe_browsing/BUILD.gn
-index 92cc4f57d03b..4780e931e9e7 100644
+index f971c742a..33f7c9d31 100644
 --- a/chrome/common/safe_browsing/BUILD.gn
 +++ b/chrome/common/safe_browsing/BUILD.gn
 @@ -68,7 +68,6 @@ if (safe_browsing_mode == 1) {
@@ -109,7 +124,7 @@ index 92cc4f57d03b..4780e931e9e7 100644
      ]
  
      defines = [
-@@ -121,7 +120,6 @@ source_set("safe_browsing") {
+@@ -136,7 +135,6 @@ source_set("safe_browsing") {
      deps += [
        ":archive_analyzer_results",
        ":download_protection_util",
@@ -118,7 +133,7 @@ index 92cc4f57d03b..4780e931e9e7 100644
      ]
  
 diff --git a/chrome/services/file_util/public/cpp/BUILD.gn b/chrome/services/file_util/public/cpp/BUILD.gn
-index 158cbfc6d157..6d8b0df7c59e 100644
+index 158cbfc6d..6d8b0df7c 100644
 --- a/chrome/services/file_util/public/cpp/BUILD.gn
 +++ b/chrome/services/file_util/public/cpp/BUILD.gn
 @@ -14,8 +14,6 @@ source_set("cpp") {
@@ -139,7 +154,7 @@ index 158cbfc6d157..6d8b0df7c59e 100644
    ]
  
 diff --git a/chrome/services/file_util/public/mojom/safe_archive_analyzer.mojom b/chrome/services/file_util/public/mojom/safe_archive_analyzer.mojom
-index 6983f7b415d4..15d5aaba3657 100644
+index 6983f7b41..15d5aaba3 100644
 --- a/chrome/services/file_util/public/mojom/safe_archive_analyzer.mojom
 +++ b/chrome/services/file_util/public/mojom/safe_archive_analyzer.mojom
 @@ -22,11 +22,6 @@ interface SafeArchiveAnalyzer {
@@ -155,7 +170,7 @@ index 6983f7b415d4..15d5aaba3657 100644
  
  [Native]
 diff --git a/chrome/services/file_util/safe_archive_analyzer.cc b/chrome/services/file_util/safe_archive_analyzer.cc
-index a13b42b197b3..db49c37b9b49 100644
+index a13b42b19..db49c37b9 100644
 --- a/chrome/services/file_util/safe_archive_analyzer.cc
 +++ b/chrome/services/file_util/safe_archive_analyzer.cc
 @@ -44,12 +44,3 @@ void SafeArchiveAnalyzer::AnalyzeDmgFile(base::File dmg_file,
@@ -172,7 +187,7 @@ index a13b42b197b3..db49c37b9b49 100644
 -  std::move(callback).Run(results);
 -}
 diff --git a/chrome/services/file_util/safe_archive_analyzer.h b/chrome/services/file_util/safe_archive_analyzer.h
-index f21efa6f57ba..2eda4f378bcc 100644
+index f21efa6f5..2eda4f378 100644
 --- a/chrome/services/file_util/safe_archive_analyzer.h
 +++ b/chrome/services/file_util/safe_archive_analyzer.h
 @@ -25,8 +25,6 @@ class SafeArchiveAnalyzer : public chrome::mojom::SafeArchiveAnalyzer {
@@ -184,3 +199,6 @@ index f21efa6f57ba..2eda4f378bcc 100644
  
    const std::unique_ptr<service_manager::ServiceContextRef> service_ref_;
  
+-- 
+2.19.2
+
