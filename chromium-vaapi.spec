@@ -75,8 +75,8 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    71.0.3578.80
-Release:    2%{?dist}
+Version:    71.0.3578.98
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -692,8 +692,8 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
-* Tue Dec 11 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 71.0.3578.80-2
-- Reduce value of jumbo_file_merge_limit even more to avoid OOMs on builders
+* Sat Dec 15 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 71.0.3578.98-1
+- Update to 71.0.3578.98 
 
 * Thu Dec 06 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 71.0.3578.80-1
 - Update to 71.0.3578.80
