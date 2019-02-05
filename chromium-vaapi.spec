@@ -19,8 +19,8 @@
 # This package depends on automagic byte compilation            
 # https://fedoraproject.org/wiki/Changes/No_more_automagic_Python_bytecompilation_phase_2            
 %global _python_bytecompile_extra 1
-#Require harfbuzz >= 1.8.6 for hb_font_funcs_set_glyph_h_advances_func
-%if 0%{?fedora} >= 29
+#Require harfbuzz >= 2 for hb_ot_tags_from_script_and_language
+%if 0%{?fedora} >= 30
 %bcond_without system_harfbuzz
 %else
 %bcond_with system_harfbuzz
@@ -36,6 +36,8 @@
 %bcond_without system_libicu
 # Allow testing whether libvpx can be unbundled
 %bcond_with system_libvpx
+# Allow testing whether ffmpeg can be unbundled
+%bcond_with system_ffmpeg
 #Allow minizip to be unbundled
 #mini-compat is going to be removed from fedora 30!
 %if 0%{?fedora} >= 30
@@ -47,36 +49,25 @@
 %bcond_with system_re2
 
 #Turn on verbose mode
-%global debug_logs 1
+%global debug_logs 0
 # Allow compiling with clang
 %global clang 0
 #Allow jumbo builds
 # Enabled by default
 %global jumbo 1
 #------------------------------------------------------
-%if %{clang}
-#Disable Build debug packages for debugging on clang
-%global debug_pkg 0
-#Disable building with Fedora compilation flags on clang
-%global fedora_compilation_flags 0
-%else
 #Build debug packages for debugging
 %global debug_pkg 1
 #Allow building with Fedora compilation flags
 %global fedora_compilation_flags 1
-%endif
-# Use ld in rawhide as gold is faulty
-%if 0%{?fedora} >= 30
-%global stopgold 1
-%else
+# Gold switch
 %global stopgold 0
-%endif
 # Enable building with ozone support
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    71.0.3578.98
-Release:    2%{?dist}
+Version:    72.0.3626.81
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -128,6 +119,9 @@ BuildRequires: pkgconfig(xtst), pkgconfig(xscrnsaver)
 BuildRequires: pkgconfig(dbus-1), pkgconfig(libudev)
 BuildRequires: pkgconfig(gnome-keyring-1)
 BuildRequires: pkgconfig(libffi)
+%if %{ozone}
+BuildRequires: mesa-libgbm-devel
+%endif
 # remove_bundled_libraries.py --do-remove
 BuildRequires: python2-rpm-macros
 BuildRequires: python2-beautifulsoup4
@@ -157,6 +151,9 @@ BuildRequires: libpng-devel
 %if %{with system_libvpx}
 BuildRequires: libvpx-devel
 %endif
+%if %{with system_ffmpeg}
+BuildRequires: ffmpeg-devel
+%endif
 BuildRequires: libwebp-devel
 %if %{with system_libxml2}
 BuildRequires: pkgconfig(libxml-2.0)
@@ -173,9 +170,11 @@ BuildRequires: desktop-file-utils
 # install AppData files
 BuildRequires: libappstream-glib
 #for vaapi
-BuildRequires:	libva-devel
+BuildRequires: libva-devel
+# Mojojojo need this >:(
+BuildRequires: java-1.8.0-openjdk
 #Runtime Requirements
-Requires:         hicolor-icon-theme
+Requires:       hicolor-icon-theme
 #Some recommendations
 Recommends:    libva-intel-hybrid-driver%{?_isa}
 Recommends:    libva-intel-driver%{?_isa}
@@ -189,15 +188,9 @@ ExclusiveArch: x86_64
 Patch1:    enable-vaapi.patch
 # Enable support for widevine
 Patch2:    widevine.patch
-#Will use any clang patch here
-Patch3:    ccompiler.patch
-#Fix breaking builds caused by gcc_ar_wrapper.py from upstream
-Patch7:    llvm-arflags.patch
 #Gcc patches area.
 #Gcc produces way too many warnings. Try to silence some of it.
 Patch8:    silencegcc.patch
-#Fix building with GCC 8
-Patch9:    chromium-71-gcc-fix.patch
 # More patches to fix chromium build here
 # remove dependency on unrar. That's a nasty code.
 Patch50:  nounrar.patch
@@ -205,19 +198,25 @@ Patch50:  nounrar.patch
 Patch51:  py2-bootstrap.patch
 # Fix building with system icu
 Patch52:  chromium-system-icu.patch
-# Fix chromium build with harfbuzz 2 in rawhide
-Patch53:  chromium-harfbuzz2.patch
 # Let's brand chromium!
 Patch54:  brand.patch
-# Disable sysroot related settings
-Patch55:  chromium-gn-r607596.patch
 # Since the newer versions of VA-API are ABI compatible, relax the version checks for VA-API, by using VA_CHECK_VERSION().
 # This will help in updating the libva to the latest releases,while still supporting the old versions, till the new version of
 # libva is merged and picked by the builds. Thus ensuring that hardware acceleration is not broken while updating the libva.
 # Taken and rebased from https://chromium-review.googlesource.com/c/chromium/src/+/1352519
 # The patch might land somewhere in the future and will be removed.
 Patch56: relax-libva-version.patch
-
+#This reverts commit https://github.com/Igalia/chromium/commit/816f0e1e5c15d7fce9389a428cbd49bbdf158501
+Patch58: system-gbm.patch
+# Possibly fixes vaapi ozone build https://github.com/Igalia/chromium/commit/0fba13c7fb502568c38de99ba41719c7b4e4fd9d
+Patch59: fixvaapiozone.patch
+# Fix webrtc include error
+Patch60: chromium-webrtc-includes.patch
+Patch61: chromium-non-void-return.patch
+Patch62: chromium-dma-buf.patch
+Patch63: chromium-drm.patch
+#Use gold in gn bootstrap
+Patch64: gn-gold.patch
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
@@ -226,26 +225,25 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ## Apply patches here ##
 %patch1 -p1 -b .vaapi
 %patch2 -p1 -b .widevine
-%if %{clang}
-%patch3 -p1 -b .cc
-%patch7 -p1 -b .llvmarflags
-%else
 %patch8 -p1 -b .silencegcc
-%patch9 -p1 -b .gcc
-%endif
 %patch50 -p1 -b .nounrar
 %patch51 -p1 -b .py2boot
 %patch52 -p1 -b .icu
-%if 0%{?fedora} >= 30
-%patch53 -p1 -b .harfbuzz2
-%endif
 %if %{freeworld}
 %patch54 -p1 -b .brand
 %endif
-%patch55 -p1 -b .gn
 %patch56 -p1 -b .relaxva
+%if %{ozone}
+%patch58 -p1 -b .sysgbm
+%patch59 -p1 -b .fixozonevaapi
+%endif
+%patch60 -p1 -b .webrtc
+%patch61 -p1 -b .nonvoid
+%patch62 -p1 -b .dma
+%patch63 -p1 -b .drm
+%patch64 -p1 -b .gn
 #Let's change the default shebang of python files.
-find -depth -type f -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
+find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
    base/third_party/dmg_fp \
     base/third_party/dynamic_annotations \
@@ -271,10 +269,10 @@ find -depth -type f -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?
     net/third_party/uri_template \
     third_party/abseil-cpp \
     third_party/adobe \
-    third_party/analytics \
     third_party/angle \
     third_party/angle/src/common/third_party/base \
     third_party/angle/src/common/third_party/smhasher \
+    third_party/angle/src/common/third_party/xxhash \
     third_party/angle/src/third_party/compiler \
     third_party/angle/src/third_party/libXNVCtrl \
     third_party/angle/src/third_party/trace_event \
@@ -306,18 +304,20 @@ find -depth -type f -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?
     third_party/catapult/tracing/third_party/pako \
     third_party/ced \
     third_party/cld_3 \
+    third_party/closure_compiler \
     third_party/crashpad \
     third_party/crashpad/crashpad/third_party/zlib \
     third_party/crc32c \
     third_party/cros_system_api \
     third_party/devscripts \
     third_party/dom_distiller_js \
+%if !%{with system_ffmpeg}
     third_party/ffmpeg \
+%endif
     third_party/fips181 \
     third_party/flatbuffers \
     third_party/flot \
     third_party/freetype \
-    third_party/glslang-angle \
     third_party/google_input_tools \
     third_party/google_input_tools/third_party/closure_library \
     third_party/google_input_tools/third_party/closure_library/third_party/closure \
@@ -369,6 +369,7 @@ find -depth -type f -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?
     third_party/minizip/ \
 %endif
     third_party/modp_b64 \
+    third_party/nasm \
     third_party/node \
     third_party/node/node_modules/polymer-bundler/lib/third_party/UglifyJS2 \
     third_party/openh264 \
@@ -407,22 +408,16 @@ find -depth -type f -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?
     third_party/speech-dispatcher \
     third_party/spirv-headers \
     third_party/SPIRV-Tools \
-    third_party/spirv-tools-angle \
     third_party/sqlite \
-    third_party/swiftshader \
-    third_party/swiftshader/third_party/llvm-subzero \
-    third_party/swiftshader/third_party/subzero \
     third_party/tcmalloc \
     third_party/usb_ids \
     third_party/usrsctp \
     third_party/vulkan \
-    third_party/vulkan-validation-layers \
 %if %{ozone}
     third_party/wayland \
 %endif
     third_party/web-animations-js \
     third_party/webdriver \
-    third_party/WebKit \
     third_party/webrtc \
     third_party/webrtc/common_audio/third_party/fft4g \
     third_party/webrtc/common_audio/third_party/spl_sqrt_floor \
@@ -447,6 +442,9 @@ find -depth -type f -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?
     v8/third_party/v8
 
 ./build/linux/unbundle/replace_gn_files.py --system-libraries \
+%if %{with system_ffmpeg}
+    ffmpeg \
+%endif
     flac \
     freetype \
     fontconfig \
@@ -495,10 +493,6 @@ sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"chromium-vaapi"/' $FILE
 #####################################BUILD#############################################
 %build
 #export compilar variables
-%if %{clang}
-export AR=llvm-ar NM=llvm-nm
-export CC=clang CXX=clang++
-%else
 export AR=ar NM=nm
 export CC=gcc CXX=g++
 %if %{fedora_compilation_flags}
@@ -519,7 +513,6 @@ export CXXFLAGS="${CXXBUILDFLAGS} -fpermissive"
 export LDFLAGS='%{__global_ldflags}'
 %else
 export CXXFLAGS=$CXXFLAGS" -fpermissive"
-%endif
 %endif
 gn_args=(
     is_debug=false
@@ -564,34 +557,28 @@ gn_args=(
 )
 # Gold is faulty on rawhide so disabled it.
 gn_args+=(
-%if %{clang}
-    is_clang=true
-    'clang_base_path = "/usr"'
-    clang_use_chrome_plugins=false
-%else
     is_clang=false
     use_lld=false
 %if %{stopgold} 
     use_gold=false
-%endif
 %endif
 )
 #Jumbo stuff
 gn_args+=(
 %if %{jumbo}
     use_jumbo_build=true
-    jumbo_file_merge_limit=7
+    jumbo_file_merge_limit=5
     concurrent_links=1
 %endif
 )
 
 
 # Ozone stuff
+# Tracking bug : https://github.com/Igalia/chromium/issues/512
 gn_args+=(
 %if %{ozone}
     use_ozone=true
-    ozone_auto_platforms=true 
-    ozone_platform_wayland=true 
+    use_system_minigbm=true 
     use_xkbcommon=true
 %endif
 )
@@ -692,6 +679,14 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Tue Feb 05 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 72.0.3626.81-1
+- Update to 72.0.3626.81
+- Add a patch to fix missing includes in webrtc
+- ozone updates (WIP)
+- Fix gn where it now needs gold linker in bootstrap
+- remove clang building implementation in this spec (out of scope)
+- Make sure chromium uses the x11 GDK backend in wayland
+
 * Fri Dec 21 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 71.0.3578.98-2
 - Re enable the non effective enable_widevine flag
 

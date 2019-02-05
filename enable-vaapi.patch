@@ -1,26 +1,22 @@
-From efdd5bdf093e9074c9eba73650ff5ad95b280ec8 Mon Sep 17 00:00:00 2001
+From abc7295ca1653c85472916909f0eb76e28e79a58 Mon Sep 17 00:00:00 2001
 From: Akarshan Biswas <akarshan.biswas@gmail.com>
-Date: Sun, 4 Nov 2018 20:26:54 +0530
-Subject: [PATCH] Enable vaapi on Linux
+Date: Thu, 24 Jan 2019 12:45:29 +0530
+Subject: [PATCH] Enable mojo with VDA2 on Linux
 
 ---
- chrome/browser/about_flags.cc                | 14 +++++++------
- chrome/browser/flag_descriptions.cc          | 22 +++++++++++++-------
- chrome/browser/flag_descriptions.h           | 16 +++++++++-----
- components/viz/service/main/viz_main_impl.cc |  2 +-
- content/gpu/BUILD.gn                         |  6 ++++++
- content/gpu/gpu_main.cc                      |  4 ++--
- gpu/config/software_rendering_list.json      | 11 ----------
- media/base/media_switches.cc                 |  2 +-
- media/filters/BUILD.gn                       |  3 ++-
- media/gpu/BUILD.gn                           |  7 +++++++
- 10 files changed, 52 insertions(+), 35 deletions(-)
+ chrome/browser/about_flags.cc                |  8 ++++----
+ chrome/browser/flag_descriptions.cc          |  9 +++++++--
+ chrome/browser/flag_descriptions.h           | 10 ++++++++--
+ gpu/config/software_rendering_list.json      |  3 ++-
+ media/media_options.gni                      |  9 ++++++---
+ media/mojo/services/gpu_mojo_media_client.cc |  4 ++--
+ 6 files changed, 29 insertions(+), 14 deletions(-)
 
 diff --git a/chrome/browser/about_flags.cc b/chrome/browser/about_flags.cc
-index db54ccb61..f32075fb8 100644
+index 0a84c6ac1..be2aa1d8b 100644
 --- a/chrome/browser/about_flags.cc
 +++ b/chrome/browser/about_flags.cc
-@@ -1797,7 +1797,7 @@ const FeatureEntry kFeatureEntries[] = {
+@@ -1714,7 +1714,7 @@ const FeatureEntry kFeatureEntries[] = {
          "disable-accelerated-video-decode",
          flag_descriptions::kAcceleratedVideoDecodeName,
          flag_descriptions::kAcceleratedVideoDecodeDescription,
@@ -29,7 +25,7 @@ index db54ccb61..f32075fb8 100644
          SINGLE_DISABLE_VALUE_TYPE(switches::kDisableAcceleratedVideoDecode),
      },
  #if defined(OS_WIN)
-@@ -2456,12 +2456,12 @@ const FeatureEntry kFeatureEntries[] = {
+@@ -2345,12 +2345,12 @@ const FeatureEntry kFeatureEntries[] = {
       FEATURE_VALUE_TYPE(service_manager::features::kXRSandbox)},
  #endif  // ENABLE_ISOLATED_XR_SERVICE
  #endif  // ENABLE_VR
@@ -41,80 +37,42 @@ index db54ccb61..f32075fb8 100644
 +     flag_descriptions::kAcceleratedMjpegDecodeDescription, kOsCrOS | kOsLinux,
       SINGLE_DISABLE_VALUE_TYPE(switches::kDisableAcceleratedMjpegDecode)},
 -#endif  // OS_CHROMEOS
-+#endif  // OS_CHROMEOS OS_LINUX
++#endif  // OS_CHROMEOS // OS_LINUX
      {"v8-cache-options", flag_descriptions::kV8CacheOptionsName,
       flag_descriptions::kV8CacheOptionsDescription, kOsAll,
       MULTI_VALUE_TYPE(kV8CacheOptionsChoices)},
-@@ -4371,12 +4371,14 @@ const FeatureEntry kFeatureEntries[] = {
-                                     "AutofillDropdownLayout")},
- #endif  // OS_ANDROID
- 
--#if defined(OS_CHROMEOS)
-+#if defined(OS_CHROMEOS) || defined(OS_LINUX)
-     {"enable-vaapi-jpeg-image-decode-acceleration",
-      flag_descriptions::kVaapiJpegImageDecodeAccelerationName,
--     flag_descriptions::kVaapiJpegImageDecodeAccelerationDescription, kOsCrOS,
-+     flag_descriptions::kVaapiJpegImageDecodeAccelerationDescription, kOsCrOS | kOsLinux,
-      FEATURE_VALUE_TYPE(features::kVaapiJpegImageDecodeAcceleration)},
-+#endif
- 
-+#if defined(OS_CHROMEOS)
-     {"enable-home-launcher-gestures",
-      flag_descriptions::kEnableHomeLauncherGesturesName,
-      flag_descriptions::kEnableHomeLauncherGesturesDescription, kOsCrOS,
 diff --git a/chrome/browser/flag_descriptions.cc b/chrome/browser/flag_descriptions.cc
-index 6cc51bbfb..3c4babe3d 100644
+index 62637e092..86f89fc6e 100644
 --- a/chrome/browser/flag_descriptions.cc
 +++ b/chrome/browser/flag_descriptions.cc
-@@ -2996,9 +2996,9 @@ const char kTextSuggestionsTouchBarDescription[] =
+@@ -3085,15 +3085,20 @@ const char kTextSuggestionsTouchBarDescription[] =
  
  #endif
  
 -// Chrome OS -------------------------------------------------------------------
-+// Chrome OS and Linux -------------------------------------------------------------------
++// Chrome OS Linux-------------------------------------------------------------------
  
 -#if defined(OS_CHROMEOS)
 +#if defined(OS_CHROMEOS) || (defined(OS_LINUX) && !defined(OS_ANDROID))
  
  const char kAcceleratedMjpegDecodeName[] =
      "Hardware-accelerated mjpeg decode for captured frame";
-@@ -3006,6 +3006,18 @@ const char kAcceleratedMjpegDecodeDescription[] =
+ const char kAcceleratedMjpegDecodeDescription[] =
      "Enable hardware-accelerated mjpeg decode for captured frame where "
      "available.";
- 
-+const char kVaapiJpegImageDecodeAccelerationName[] =
-+    "VA-API JPEG decode acceleration for images";
-+const char kVaapiJpegImageDecodeAccelerationDescription[] =
-+    "Enable or disable decode acceleration of JPEG images (as opposed to camera"
-+    " captures) using the VA-API.";
++#endif
 +
-+#endif  // defined(OS_CHROMEOS) defined(OS_LINUX) and !defined(OS_ANDROID)
-+
-+// Only Chrome OS  ------------------------------------------------------
++// Chrome OS --------------------------------------------------
 +
 +#if defined(OS_CHROMEOS)
-+
+ 
  const char kAllowTouchpadThreeFingerClickName[] = "Touchpad three-finger-click";
  const char kAllowTouchpadThreeFingerClickDescription[] =
-     "Enables touchpad three-finger-click as middle button.";
-@@ -3524,12 +3536,6 @@ const char kUseMonitorColorSpaceDescription[] =
-     "Enables Chrome to use the  color space information provided by the monitor"
-     " instead of the default sRGB color space.";
- 
--const char kVaapiJpegImageDecodeAccelerationName[] =
--    "VA-API JPEG decode acceleration for images";
--const char kVaapiJpegImageDecodeAccelerationDescription[] =
--    "Enable or disable decode acceleration of JPEG images (as opposed to camera"
--    " captures) using the VA-API.";
--
- const char kVideoPlayerChromecastSupportName[] =
-     "Experimental Chromecast support for Video Player";
- const char kVideoPlayerChromecastSupportDescription[] =
 diff --git a/chrome/browser/flag_descriptions.h b/chrome/browser/flag_descriptions.h
-index 944695782..38d8fe144 100644
+index 5dac660bb..6cc4115da 100644
 --- a/chrome/browser/flag_descriptions.h
 +++ b/chrome/browser/flag_descriptions.h
-@@ -1824,13 +1824,22 @@ extern const char kPermissionPromptPersistenceToggleDescription[];
+@@ -1846,13 +1846,19 @@ extern const char kPermissionPromptPersistenceToggleDescription[];
  
  #endif  // defined(OS_MACOSX)
  
@@ -122,171 +80,94 @@ index 944695782..38d8fe144 100644
 +// Chrome OS and Linux ------------------------------------------------------------------
  
 -#if defined(OS_CHROMEOS)
-+#if defined(OS_CHROMEOS)  || (defined(OS_LINUX) && !defined(OS_ANDROID))
++#if defined(OS_CHROMEOS) || (defined(OS_LINUX) && !defined(OS_ANDROID))
  
  extern const char kAcceleratedMjpegDecodeName[];
  extern const char kAcceleratedMjpegDecodeDescription[];
  
-+extern const char kVaapiJpegImageDecodeAccelerationName[];
-+extern const char kVaapiJpegImageDecodeAccelerationDescription[];
++#endif // defined(OS_CHROMEOS) || (defined(OS_LINUX) && !defined(OS_ANDROID))
 +
-+#endif
-+
-+// Chrome OS ----------------------------------------------------------------------
++// Chrome OS ------------------------------------------------------------------------
 +
 +#if defined(OS_CHROMEOS)
 +
  extern const char kAllowTouchpadThreeFingerClickName[];
  extern const char kAllowTouchpadThreeFingerClickDescription[];
  
-@@ -2145,9 +2154,6 @@ extern const char kUseMashDescription[];
- extern const char kUseMonitorColorSpaceName[];
- extern const char kUseMonitorColorSpaceDescription[];
- 
--extern const char kVaapiJpegImageDecodeAccelerationName[];
--extern const char kVaapiJpegImageDecodeAccelerationDescription[];
--
- extern const char kVideoPlayerChromecastSupportName[];
- extern const char kVideoPlayerChromecastSupportDescription[];
- 
-diff --git a/components/viz/service/main/viz_main_impl.cc b/components/viz/service/main/viz_main_impl.cc
-index 6f5f55de7..b90db3738 100644
---- a/components/viz/service/main/viz_main_impl.cc
-+++ b/components/viz/service/main/viz_main_impl.cc
-@@ -41,7 +41,7 @@ std::unique_ptr<base::Thread> CreateAndStartIOThread() {
-   // It should be possible to use |main_task_runner_| for doing IO tasks.
-   base::Thread::Options thread_options(base::MessageLoop::TYPE_IO, 0);
-   thread_options.priority = base::ThreadPriority::NORMAL;
--#if defined(OS_ANDROID) || defined(OS_CHROMEOS)
-+#if defined(OS_ANDROID) || defined(OS_CHROMEOS) || defined(OS_LINUX)
-   // TODO(reveman): Remove this in favor of setting it explicitly for each
-   // type of process.
-   thread_options.priority = base::ThreadPriority::DISPLAY;
-diff --git a/content/gpu/BUILD.gn b/content/gpu/BUILD.gn
-index 8974e441d..d7eba85a9 100644
---- a/content/gpu/BUILD.gn
-+++ b/content/gpu/BUILD.gn
-@@ -6,6 +6,7 @@ import("//build/config/jumbo.gni")
- import("//build/config/ui.gni")
- import("//gpu/vulkan/features.gni")
- import("//media/media_options.gni")
-+import("//media/gpu/args.gni")
- import("//ui/ozone/ozone.gni")
- 
- # See //content/BUILD.gn for how this works.
-@@ -134,4 +135,9 @@ target(link_target_type, "gpu_sources") {
-       (!is_chromecast || is_cast_desktop_build)) {
-     configs += [ "//build/config/linux/dri" ]
-   }
-+
-+  # Use vaapi on desktop Linux builds when use_vaapi is set
-+  if (is_desktop_linux && use_vaapi) {
-+    public_configs = [ "//media/gpu:libva_config" ]
-+  }
- }
-diff --git a/content/gpu/gpu_main.cc b/content/gpu/gpu_main.cc
-index 8397889b6..188d960a4 100644
---- a/content/gpu/gpu_main.cc
-+++ b/content/gpu/gpu_main.cc
-@@ -284,7 +284,7 @@ int GpuMain(const MainFunctionParams& parameters) {
- 
-   base::PlatformThread::SetName("CrGpuMain");
- 
--#if defined(OS_ANDROID) || defined(OS_CHROMEOS)
-+#if defined(OS_ANDROID) || defined(OS_CHROMEOS) || defined(OS_LINUX)
-   // Set thread priority before sandbox initialization.
-   base::PlatformThread::SetCurrentThreadPriority(base::ThreadPriority::DISPLAY);
- #endif
-@@ -317,7 +317,7 @@ int GpuMain(const MainFunctionParams& parameters) {
-   GetContentClient()->SetGpuInfo(gpu_init->gpu_info());
- 
-   base::ThreadPriority io_thread_priority = base::ThreadPriority::NORMAL;
--#if defined(OS_ANDROID) || defined(OS_CHROMEOS)
-+#if defined(OS_ANDROID) || defined(OS_CHROMEOS) || defined(OS_LINUX)
-   io_thread_priority = base::ThreadPriority::DISPLAY;
- #endif
- 
 diff --git a/gpu/config/software_rendering_list.json b/gpu/config/software_rendering_list.json
-index cb6118b6a..7b8ea0f75 100644
+index 65f37b3f1..ae8a1718f 100644
 --- a/gpu/config/software_rendering_list.json
 +++ b/gpu/config/software_rendering_list.json
-@@ -369,17 +369,6 @@
-         "all"
-       ]
+@@ -371,11 +371,12 @@
      },
--    {
--      "id": 48,
--      "description": "Accelerated video decode is unavailable on Linux",
--      "cr_bugs": [137247],
--      "os": {
--        "type": "linux"
--      },
--      "features": [
--        "accelerated_video_decode"
--      ]
--    },
      {
-       "id": 50,
-       "description": "Disable VMware software renderer on older Mesa",
-diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
-index 41bfa9172..30ca4f40a 100644
---- a/media/base/media_switches.cc
-+++ b/media/base/media_switches.cc
-@@ -495,7 +495,7 @@ bool IsVideoCaptureAcceleratedJpegDecodingEnabled() {
-           switches::kUseFakeJpegDecodeAccelerator)) {
-     return true;
-   }
--#if defined(OS_CHROMEOS)
-+#if defined(OS_CHROMEOS) || defined(OS_LINUX)
-   return true;
- #endif
-   return false;
-diff --git a/media/filters/BUILD.gn b/media/filters/BUILD.gn
-index d558b537a..9ad090e07 100644
---- a/media/filters/BUILD.gn
-+++ b/media/filters/BUILD.gn
+       "id": 48,
+-      "description": "Accelerated video decode is unavailable on Linux",
++      "description": "Accelerated VA-API video decode is not supported on NVIDIA platforms",
+       "cr_bugs": [137247],
+       "os": {
+         "type": "linux"
+       },
++      "vendor_id": "0x10de",
+       "features": [
+         "accelerated_video_decode"
+       ]
+diff --git a/media/media_options.gni b/media/media_options.gni
+index 46eaa5818..6e338f651 100644
+--- a/media/media_options.gni
++++ b/media/media_options.gni
 @@ -5,6 +5,7 @@
- import("//build/config/jumbo.gni")
- import("//media/media_options.gni")
- import("//third_party/libaom/options.gni")
+ import("//build/config/chrome_build.gni")
+ import("//build/config/chromecast_build.gni")
+ import("//build/config/features.gni")
 +import("//media/gpu/args.gni")
+ import("//testing/libfuzzer/fuzzer_test.gni")
  
- jumbo_source_set("filters") {
-   # Do not expand the visibility here without double-checking with OWNERS, this
-@@ -200,7 +201,7 @@ jumbo_source_set("filters") {
-     deps += [ "//media/base/android" ]
-   }
+ # Do not expand this list without double-checking with OWNERS, this is a list of
+@@ -129,8 +130,9 @@ declare_args() {
+   # |mojo_media_services|). When enabled, selected mojo paths will be enabled in
+   # the media pipeline and corresponding services will hosted in the selected
+   # remote process (e.g. "utility" process, see |mojo_media_host|).
+-  enable_mojo_media = is_android || is_chromecast || is_chromeos || is_mac ||
+-                      is_win || enable_library_cdms
++  enable_mojo_media =
++      is_android || is_chromecast || is_chromeos || is_mac || is_win ||
++      enable_library_cdms || (is_desktop_linux && use_vaapi)
  
--  if (current_cpu != "arm" && is_linux) {
-+  if (use_vaapi && is_linux) {
-     sources += [
-       "h264_bitstream_buffer.cc",
-       "h264_bitstream_buffer.h",
-diff --git a/media/gpu/BUILD.gn b/media/gpu/BUILD.gn
-index 07bfdefda..7e33cd747 100644
---- a/media/gpu/BUILD.gn
-+++ b/media/gpu/BUILD.gn
-@@ -508,6 +508,12 @@ if (use_v4l2_codec || use_vaapi || is_mac || is_win) {
-   }
- }
- 
-+import("//build/config/linux/pkg_config.gni")
-+
-+pkg_config("libva_config") {
-+  packages = [ "libva" ]
-+}
-+
- if (use_vaapi) {
-   test("jpeg_encode_accelerator_unittest") {
-     deps = [
-@@ -578,6 +584,7 @@ if (is_chromeos || is_linux) {
-     if (use_ozone) {
-       deps += [ "//ui/ozone" ]
+   # Enable the TestMojoMediaClient to be used in mojo MediaService. This is for
+   # testing only and will override the default platform MojoMediaClient, if any.
+@@ -200,7 +202,8 @@ if (enable_mojo_media) {
+       ]
+       _default_mojo_media_host = "gpu"
      }
-+    public_configs = [ ":libva_config" ]
+-  } else if (is_chromeos || is_mac || is_win) {
++  } else if (is_chromeos || is_mac || is_win ||
++             (is_desktop_linux && use_vaapi)) {
+     _default_mojo_media_services = [ "video_decoder" ]
+     _default_mojo_media_host = "gpu"
    }
- }
+diff --git a/media/mojo/services/gpu_mojo_media_client.cc b/media/mojo/services/gpu_mojo_media_client.cc
+index 75f5e611c..09a8fef92 100644
+--- a/media/mojo/services/gpu_mojo_media_client.cc
++++ b/media/mojo/services/gpu_mojo_media_client.cc
+@@ -54,7 +54,7 @@ namespace media {
+ namespace {
  
+ #if defined(OS_ANDROID) || defined(OS_CHROMEOS) || defined(OS_MACOSX) || \
+-    defined(OS_WIN)
++    defined(OS_WIN) || defined(OS_LINUX)
+ gpu::CommandBufferStub* GetCommandBufferStub(
+     base::WeakPtr<MediaGpuChannelManager> media_gpu_channel_manager,
+     base::UnguessableToken channel_token,
+@@ -148,7 +148,7 @@ std::unique_ptr<VideoDecoder> GpuMojoMediaClient::CreateVideoDecoder(
+       android_overlay_factory_cb_, std::move(request_overlay_info_cb),
+       std::make_unique<VideoFrameFactoryImpl>(gpu_task_runner_,
+                                               std::move(get_stub_cb)));
+-#elif defined(OS_CHROMEOS) || defined(OS_MACOSX) || defined(OS_WIN)
++#elif defined(OS_CHROMEOS) || defined(OS_MACOSX) || defined(OS_WIN) || defined(OS_LINUX)
+   std::unique_ptr<VideoDecoder> vda_video_decoder = VdaVideoDecoder::Create(
+       task_runner, gpu_task_runner_, media_log->Clone(), target_color_space,
+       gpu_preferences_, gpu_workarounds_,
 -- 
-2.19.2
+2.20.1
 

@@ -5,8 +5,9 @@
 # found in the LICENSE file.
 
 # This file is obtained from https://src.fedoraproject.org/rpms/chromium/
-# and modified by Akarshan Biswas <akarshan.biswas@hotmail.com. All modifications are also
+# and modified by Akarshan Biswas <akarshanbiswas@fedoraproject.org>. All modifications are also
 # licensed under 3-clause BSD license.
+CHROMIUM_DISTRO_FLAGS=()
 
 # Let the wrapped binary know that it has been run through the wrapper.
 export CHROME_WRAPPER="$(readlink -f "$0")"
@@ -38,19 +39,26 @@ else
 fi
 export LD_LIBRARY_PATH
 
+#On wayland pass the correct GDK_BACKEND
+# In future this will be used for running chromium natively on Wayland
+if [ $XDG_SESSION_TYPE == "wayland" ]; then
+export GDK_BACKEND=x11
+fi
+
+
 # Sanitize std{in,out,err} because they'll be shared with untrusted child
 # processes (http://crbug.com/376567).
 exec < /dev/null
 exec > >(exec cat)
 exec 2> >(exec cat >&2)
 
-export CHROME_VERSION_EXTRA="Built from source for @@BUILDTARGET@@"
+export CHROME_VERSION_EXTRA="Built from source for Fedora 29"
 
-CHROMIUM_DISTRO_FLAGS=" --enable-plugins \
-                        --enable-extensions \
-                        --enable-user-scripts \
-                        --enable-printing \
-                        --enable-gpu-rasterization \
-                        --enable-sync"
+CHROMIUM_DISTRO_FLAGS+=" --enable-plugins \
+                         --enable-extensions \
+                         --enable-user-scripts \
+                         --enable-printing \
+                         --enable-gpu-rasterization \
+                         --enable-sync"
 
-exec -a "$0" "@@CHROMIUMDIR@@/$(basename "$0" | sed 's/\.sh$//')" $CHROMIUM_DISTRO_FLAGS "$@"
+exec -a "$0" "/usr/lib64/chromium-vaapi/$(basename "$0" | sed 's/\.sh$//')" $CHROMIUM_DISTRO_FLAGS "$@"
