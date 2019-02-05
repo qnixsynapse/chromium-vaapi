@@ -61,7 +61,7 @@
 #Allow building with Fedora compilation flags
 %global fedora_compilation_flags 1
 # Gold switch
-%global stopgold 0
+%global stopgold 1
 # Enable building with ozone support
 %global ozone 0
 ##############################Package Definitions######################################
