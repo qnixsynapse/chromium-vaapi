@@ -32,8 +32,13 @@
 %bcond_without system_ply
 
 # Allow testing whether icu can be unbundled
-# A patch fix building so enabled by default
+# A patch fix building so enabled by default for Fedora 30
+# Need icu version >= 63.1
+%if 0%{?fedora} >= 30
 %bcond_without system_libicu
+%else
+%bcond_with system_libicu
+%endif
 # Allow testing whether libvpx can be unbundled
 %bcond_with system_libvpx
 # Allow testing whether ffmpeg can be unbundled
@@ -67,7 +72,7 @@
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    72.0.3626.81
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -228,7 +233,9 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch8 -p1 -b .silencegcc
 %patch50 -p1 -b .nounrar
 %patch51 -p1 -b .py2boot
+%if %{with system_libicu}
 %patch52 -p1 -b .icu
+%endif
 %if %{freeworld}
 %patch54 -p1 -b .brand
 %endif
@@ -679,6 +686,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Wed Feb 06 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 72.0.3626.81-2
+- Rebundle icu for fedora 29 and fedora 28; Need icu version >= 63.1
+
 * Tue Feb 05 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 72.0.3626.81-1
 - Update to 72.0.3626.81
 - Add a patch to fix missing includes in webrtc
