@@ -52,7 +52,6 @@ exec < /dev/null
 exec > >(exec cat)
 exec 2> >(exec cat >&2)
 
-export CHROME_VERSION_EXTRA="Built from source for Fedora 29"
 
 CHROMIUM_DISTRO_FLAGS+=" --enable-plugins \
                          --enable-extensions \
@@ -61,4 +60,4 @@ CHROMIUM_DISTRO_FLAGS+=" --enable-plugins \
                          --enable-gpu-rasterization \
                          --enable-sync"
 
-exec -a "$0" "/usr/lib64/chromium-vaapi/$(basename "$0" | sed 's/\.sh$//')" $CHROMIUM_DISTRO_FLAGS "$@"
+exec -a "$0" "@@CHROMIUMDIR@@/$(basename "$0" | sed 's/\.sh$//')" $CHROMIUM_DISTRO_FLAGS "$@"
