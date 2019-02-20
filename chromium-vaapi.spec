@@ -211,6 +211,8 @@ Patch54:  brand.patch
 # Taken and rebased from https://chromium-review.googlesource.com/c/chromium/src/+/1352519
 # The patch might land somewhere in the future and will be removed.
 Patch56: relax-libva-version.patch
+# Fix webrtc include error
+Patch60: chromium-webrtc-includes.patch
 #Use gold in gn bootstrap
 Patch64: gn-gold.patch
 %description
@@ -231,6 +233,7 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch54 -p1 -b .brand
 %endif
 %patch56 -p1 -b .relaxva
+%patch60 -p1 -b .webrtc
 %patch64 -p1 -b .gn
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
