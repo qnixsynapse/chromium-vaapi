@@ -1,4 +1,4 @@
-From 5f5d6cf6508f4d6ad98c24d73f38755a07ec8da4 Mon Sep 17 00:00:00 2001
+From 09ddf9ea6a9fee9f4e0de871bb58e294bce602c5 Mon Sep 17 00:00:00 2001
 From: Akarshan Biswas <akarshan.biswas@gmail.com>
 Date: Tue, 5 Feb 2019 14:46:38 +0530
 Subject: [PATCH] Use gold in gn bootstrap
@@ -8,17 +8,17 @@ Subject: [PATCH] Use gold in gn bootstrap
  1 file changed, 1 insertion(+)
 
 diff --git a/tools/gn/build/gen.py b/tools/gn/build/gen.py
-index ee4f8e146..3d866df2e 100755
+index 96dafb957..8a995e8eb 100755
 --- a/tools/gn/build/gen.py
 +++ b/tools/gn/build/gen.py
-@@ -317,6 +317,7 @@ def WriteGNNinja(path, platform, host, options):
+@@ -322,6 +322,7 @@ def WriteGNNinja(path, platform, host, options):
        ldflags.extend([
            '-static-libstdc++',
            '-Wl,--as-needed',
 +          '-fuse-ld=gold',
        ])
-       libs.extend([
-           # These are needed by libc++.
+       # This is needed by libc++.
+       libs.append('-ldl')
 -- 
 2.20.1
 

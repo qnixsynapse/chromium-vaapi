@@ -3,8 +3,6 @@
 %global freeworld 1
 #This can be any folder on out
 %global target out/Release
-#Our installation folder
-%global chromiumdir %{_libdir}/chromium-vaapi
 ### Google API keys (see http://www.chromium.org/developers/how-tos/api-keys)
 ### Note: These are for Fedora use ONLY.
 ### For your own distribution, please get your own set of keys.
@@ -66,13 +64,13 @@
 #Allow building with Fedora compilation flags
 %global fedora_compilation_flags 1
 # Gold switch
-%global stopgold 0
+%global stopgold 1
 # Enable building with ozone support
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    72.0.3626.81
-Release:    2%{?dist}
+Version:    72.0.3626.109
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -99,7 +97,9 @@ Source10:  %{name}.sh
 Source11:  %{name}.appdata.xml
 #Personal stuff
 Source15:  LICENSE
-
+######################## Installation Folder #################################################
+#Our installation folder
+%global chromiumdir %{_libdir}/%{name}
 ########################################################################################
 #Compiler settings
 %if %{clang}	
@@ -211,15 +211,8 @@ Patch54:  brand.patch
 # Taken and rebased from https://chromium-review.googlesource.com/c/chromium/src/+/1352519
 # The patch might land somewhere in the future and will be removed.
 Patch56: relax-libva-version.patch
-#This reverts commit https://github.com/Igalia/chromium/commit/816f0e1e5c15d7fce9389a428cbd49bbdf158501
-Patch58: system-gbm.patch
-# Possibly fixes vaapi ozone build https://github.com/Igalia/chromium/commit/0fba13c7fb502568c38de99ba41719c7b4e4fd9d
-Patch59: fixvaapiozone.patch
 # Fix webrtc include error
 Patch60: chromium-webrtc-includes.patch
-Patch61: chromium-non-void-return.patch
-Patch62: chromium-dma-buf.patch
-Patch63: chromium-drm.patch
 #Use gold in gn bootstrap
 Patch64: gn-gold.patch
 %description
@@ -240,14 +233,7 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch54 -p1 -b .brand
 %endif
 %patch56 -p1 -b .relaxva
-%if %{ozone}
-%patch58 -p1 -b .sysgbm
-%patch59 -p1 -b .fixozonevaapi
-%endif
 %patch60 -p1 -b .webrtc
-%patch61 -p1 -b .nonvoid
-%patch62 -p1 -b .dma
-%patch63 -p1 -b .drm
 %patch64 -p1 -b .gn
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
@@ -496,7 +482,7 @@ mkdir -p third_party/node/linux/node-linux-x64/bin
 ln -s %{_bindir}/node third_party/node/linux/node-linux-x64/bin/node
 # Hard code extra version
 FILE=chrome/common/channel_info_posix.cc
-sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"chromium-vaapi"/' $FILE
+sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"%{name}"/' $FILE
 #####################################BUILD#############################################
 %build
 #export compilar variables
@@ -612,9 +598,8 @@ mkdir -p %{buildroot}%{_mandir}/man1
 mkdir -p %{buildroot}%{_metainfodir}
 mkdir -p %{buildroot}%{_datadir}/applications
 mkdir -p %{buildroot}%{_datadir}/gnome-control-center/default-apps
-sed -e "s|@@CHROMIUMDIR@@|%{chromiumdir}|" -e "s|@@BUILDTARGET@@|`cat /etc/redhat-release`|" \
-    %{SOURCE10} > chromium-vaapi.sh
-install -m 755 chromium-vaapi.sh %{buildroot}%{_bindir}/%{name}
+sed -e "s|@@CHROMIUMDIR@@|%{chromiumdir}|"     %{SOURCE10} > %{name}.sh
+install -m 755 %{name}.sh %{buildroot}%{_bindir}/%{name}
 install -m 644 %{SOURCE11} %{buildroot}%{_metainfodir}
 sed -e "s|@@MENUNAME@@|%{name}|g" -e "s|@@PACKAGE@@|%{name}|g" \
     chrome/app/resources/manpage.1.in > chrome.1
@@ -656,22 +641,22 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %files
 %license LICENSE
 %doc AUTHORS 
-%{_bindir}/chromium-vaapi
-%{_metainfodir}/chromium-vaapi.appdata.xml
-%{_datadir}/applications/chromium-vaapi.desktop
-%{_datadir}/gnome-control-center/default-apps/chromium-vaapi.xml
-%{_datadir}/icons/hicolor/16x16/apps/chromium-vaapi.png
-%{_datadir}/icons/hicolor/22x22/apps/chromium-vaapi.png
-%{_datadir}/icons/hicolor/24x24/apps/chromium-vaapi.png
-%{_datadir}/icons/hicolor/32x32/apps/chromium-vaapi.png
-%{_datadir}/icons/hicolor/32x32/apps/chromium-vaapi.xpm
-%{_datadir}/icons/hicolor/48x48/apps/chromium-vaapi.png
-%{_datadir}/icons/hicolor/64x64/apps/chromium-vaapi.png
-%{_datadir}/icons/hicolor/128x128/apps/chromium-vaapi.png
-%{_datadir}/icons/hicolor/256x256/apps/chromium-vaapi.png
-%{_mandir}/man1/chromium-vaapi.1.gz
+%{_bindir}/%{name}
+%{_metainfodir}/%{name}.appdata.xml
+%{_datadir}/applications/%{name}.desktop
+%{_datadir}/gnome-control-center/default-apps/%{name}.xml
+%{_datadir}/icons/hicolor/16x16/apps/%{name}.png
+%{_datadir}/icons/hicolor/22x22/apps/%{name}.png
+%{_datadir}/icons/hicolor/24x24/apps/%{name}.png
+%{_datadir}/icons/hicolor/32x32/apps/%{name}.png
+%{_datadir}/icons/hicolor/32x32/apps/%{name}.xpm
+%{_datadir}/icons/hicolor/48x48/apps/%{name}.png
+%{_datadir}/icons/hicolor/64x64/apps/%{name}.png
+%{_datadir}/icons/hicolor/128x128/apps/%{name}.png
+%{_datadir}/icons/hicolor/256x256/apps/%{name}.png
+%{_mandir}/man1/%{name}.1.gz
 %dir %{chromiumdir}
-%{chromiumdir}/chromium-vaapi
+%{chromiumdir}/%{name}
 %{chromiumdir}/chrome-sandbox
 %{chromiumdir}/chromedriver
 %if !%{with system_libicu}
@@ -686,6 +671,10 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Tue Feb 19 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 72.0.3626.109-1
+- Update to 72.0.3626.109
+- remove ozone patches
+
 * Wed Feb 06 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 72.0.3626.81-2
 - Rebundle icu for fedora 29 and fedora 28; Need icu version >= 63.1
 
