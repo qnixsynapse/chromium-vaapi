@@ -215,6 +215,8 @@ Patch56: relax-libva-version.patch
 Patch60: chromium-webrtc-includes.patch
 #Use gold in gn bootstrap
 Patch64: gn-gold.patch
+# From Upstream 2nd part of patch 56.
+Patch65: fix-the-VA_CHECK_VERSION.patch
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
@@ -235,6 +237,7 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch56 -p1 -b .relaxva
 %patch60 -p1 -b .webrtc
 %patch64 -p1 -b .gn
+%patch65 -p1 -b .vacheck
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
