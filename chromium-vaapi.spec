@@ -53,8 +53,6 @@
 
 #Turn on verbose mode
 %global debug_logs 0
-# Allow compiling with clang
-%global clang 0
 #Allow jumbo builds
 # Enabled by default
 %global jumbo 1
@@ -69,7 +67,7 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    72.0.3626.109
+Version:    72.0.3626.121
 Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
@@ -102,14 +100,9 @@ Source15:  LICENSE
 %global chromiumdir %{_libdir}/%{name}
 ########################################################################################
 #Compiler settings
-%if %{clang}	
-BuildRequires: clang, llvm, lld
-%else 
-#GCC mode on
 # Make sure we don't encounter any bug
 BuildRequires: gcc 
 BuildRequires: gcc-c++
-%endif
 # Basic tools and libraries needed for building
 BuildRequires: ninja-build, nodejs, bison, gperf, hwdata
 BuildRequires: libgcc, glibc, libatomic
@@ -674,6 +667,10 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Sun Mar 03 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 72.0.3626.121-1
+- Updated to 72.0.3626.121
+- spec cleanup
+
 * Tue Feb 19 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 72.0.3626.109-1
 - Update to 72.0.3626.109
 - remove ozone patches
