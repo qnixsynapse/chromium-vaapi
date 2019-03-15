@@ -67,7 +67,7 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    72.0.3626.121
+Version:    73.0.3683.75
 Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
@@ -117,8 +117,14 @@ BuildRequires: pkgconfig(xtst), pkgconfig(xscrnsaver)
 BuildRequires: pkgconfig(dbus-1), pkgconfig(libudev)
 BuildRequires: pkgconfig(gnome-keyring-1)
 BuildRequires: pkgconfig(libffi)
+#for vaapi
+BuildRequires:  pkgconfig(libva)
 %if %{ozone}
-BuildRequires: mesa-libgbm-devel
+BuildRequires:  pkgconfig(gbm)
+BuildRequires:  pkgconfig(wayland-client)
+BuildRequires:  pkgconfig(wayland-cursor)
+BuildRequires:  pkgconfig(wayland-scanner)
+BuildRequires:  pkgconfig(wayland-server)
 %endif
 # remove_bundled_libraries.py --do-remove
 BuildRequires: python2-rpm-macros
@@ -167,8 +173,6 @@ BuildRequires: pulseaudio-libs-devel
 BuildRequires: desktop-file-utils
 # install AppData files
 BuildRequires: libappstream-glib
-#for vaapi
-BuildRequires: libva-devel
 # Mojojojo need this >:(
 BuildRequires: java-1.8.0-openjdk
 #Runtime Requirements
@@ -190,6 +194,14 @@ Patch2:    widevine.patch
 #Gcc produces way too many warnings. Try to silence some of it.
 Patch8:    silencegcc.patch
 # More patches to fix chromium build here
+#Gentoo patches
+Patch9:    chromium-gcc8-r630084.patch
+Patch10:    chromium-gcc8-r630140.patch
+Patch11:    chromium-gcc8-r630249.patch
+Patch12:    chromium-gcc8-r630355.patch
+Patch13:    chromium-gcc8-r631472.patch
+Patch14:    chromium-gcc8-r631962.patch
+Patch15:    chromium-gcc8-r632385.patch
 # remove dependency on unrar. That's a nasty code.
 Patch50:  nounrar.patch
 # Bootstrap still uses python command
@@ -198,18 +210,8 @@ Patch51:  py2-bootstrap.patch
 Patch52:  chromium-system-icu.patch
 # Let's brand chromium!
 Patch54:  brand.patch
-# Since the newer versions of VA-API are ABI compatible, relax the version checks for VA-API, by using VA_CHECK_VERSION().
-# This will help in updating the libva to the latest releases,while still supporting the old versions, till the new version of
-# libva is merged and picked by the builds. Thus ensuring that hardware acceleration is not broken while updating the libva.
-# Taken and rebased from https://chromium-review.googlesource.com/c/chromium/src/+/1352519
-# The patch might land somewhere in the future and will be removed.
-Patch56: relax-libva-version.patch
-# Fix webrtc include error
-Patch60: chromium-webrtc-includes.patch
 #Use gold in gn bootstrap
 Patch64: gn-gold.patch
-# From Upstream 2nd part of patch 56.
-Patch65: fix-the-VA_CHECK_VERSION.patch
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
@@ -219,6 +221,13 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch1 -p1 -b .vaapi
 %patch2 -p1 -b .widevine
 %patch8 -p1 -b .silencegcc
+%patch9 -p1 -b .gcc81
+%patch10 -p1 -b .gcc82
+%patch11 -p1 -b .gcc83
+%patch12 -p1 -b .gcc84
+%patch13 -p1 -b gcc85
+%patch14 -p1 -b .gcc86
+%patch15 -p1 -b .gcc87
 %patch50 -p1 -b .nounrar
 %patch51 -p1 -b .py2boot
 %if %{with system_libicu}
@@ -227,10 +236,7 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %if %{freeworld}
 %patch54 -p1 -b .brand
 %endif
-%patch56 -p1 -b .relaxva
-%patch60 -p1 -b .webrtc
 %patch64 -p1 -b .gn
-%patch65 -p1 -b .vacheck
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
@@ -250,11 +256,9 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     courgette/third_party \
     native_client/src/third_party/dlmalloc \
     native_client/src/third_party/valgrind \
-    net/third_party/http2 \
     net/third_party/mozilla_security_manager \
     net/third_party/nss \
     net/third_party/quic \
-    net/third_party/spdy \
     net/third_party/uri_template \
     third_party/abseil-cpp \
     third_party/adobe \
@@ -390,6 +394,7 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/s2cellid \
     third_party/sfntly \
     third_party/skia \
+    third_party/skia/include/third_party/vulkan \
     third_party/skia/third_party/gif \
     third_party/skia/third_party/vulkan \
     third_party/skia/third_party/skcms \
@@ -425,6 +430,7 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
 %endif
     tools/gn/base/third_party/icu \
     url/third_party/mozilla \
+    v8/src/third_party/siphash \
     v8/src/third_party/valgrind \
     v8/src/third_party/utf8-decoder \
     v8/third_party/inspector_protocol \
@@ -667,6 +673,10 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Fri Mar 15 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 73.0.3683.75-1
+- Update to 73.0.3683.75
+- Update BuildRequires for ozone, libva; used pkgconfig instead
+
 * Sun Mar 03 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 72.0.3626.121-1
 - Updated to 72.0.3626.121
 - spec cleanup
