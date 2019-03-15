@@ -52,7 +52,7 @@
 %bcond_with system_re2
 
 #Turn on verbose mode
-%global debug_logs 0
+%global debug_logs 1
 #Allow jumbo builds
 # Enabled by default
 %global jumbo 1
@@ -68,7 +68,7 @@
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    73.0.3683.75
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -110,6 +110,10 @@ BuildRequires: libcap-devel, cups-devel, alsa-lib-devel
 BuildRequires: mesa-libGL-devel, mesa-libEGL-devel
 %if %{with system_minizip}
 BuildRequires:	minizip-devel
+%endif
+# Pipewire need this.
+%if 0%{?fedora} >= 29
+BuildRequires:	pkgconfig(libpipewire-0.2)
 %endif
 BuildRequires: pkgconfig(gtk+-2.0), pkgconfig(gtk+-3.0)
 BuildRequires: pkgconfig(libexif), pkgconfig(nss)
@@ -212,6 +216,9 @@ Patch52:  chromium-system-icu.patch
 Patch54:  brand.patch
 #Use gold in gn bootstrap
 Patch64: gn-gold.patch
+#Stolen from Fedora to fix building with pipewire
+# https://src.fedoraproject.org/rpms/chromium/blob/master/f/chromium-73.0.3683.75-pipewire-cstring-fix.patch
+Patch65: chromium-73.0.3683.75-pipewire-cstring-fix.patch
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
@@ -237,6 +244,9 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch54 -p1 -b .brand
 %endif
 %patch64 -p1 -b .gn
+%if 0%{?fedora} >= 29
+%patch65 -p1 -b .pipewire
+%endif
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
@@ -567,6 +577,13 @@ gn_args+=(
 %endif
 )
 
+#Pipewire
+gn_args+=(
+%if 0%{?fedora} >= 29
+     rtc_use_pipewire=true
+     rtc_link_pipewire=true
+%endif
+)
 
 # Ozone stuff
 # Tracking bug : https://github.com/Igalia/chromium/issues/512
@@ -673,9 +690,14 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Fri Mar 15 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 73.0.3683.75-2
+- Enable pipewire support
+- Added a patch from fedora to fix building with pipewire support
+
 * Fri Mar 15 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 73.0.3683.75-1
 - Update to 73.0.3683.75
 - Update BuildRequires for ozone, libva; used pkgconfig instead
+
 
 * Sun Mar 03 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 72.0.3626.121-1
 - Updated to 72.0.3626.121
