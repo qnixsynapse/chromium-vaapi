@@ -60,9 +60,9 @@
 #Build debug packages for debugging
 %global debug_pkg 1
 #Allow building with Fedora compilation flags
-%global fedora_compilation_flags 1
+%global fedora_compilation_flags 0
 # Gold switch
-%global stopgold 1
+%global stopgold 0
 # Enable building with ozone support
 %global ozone 0
 ##############################Package Definitions######################################
@@ -219,6 +219,8 @@ Patch64: gn-gold.patch
 #Stolen from Fedora to fix building with pipewire
 # https://src.fedoraproject.org/rpms/chromium/blob/master/f/chromium-73.0.3683.75-pipewire-cstring-fix.patch
 Patch65: chromium-73.0.3683.75-pipewire-cstring-fix.patch
+# Stop Vsync error spam when chromium runs on Wayland (Reviewed upstream)
+Patch66: stopVsyncspam.patch
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
@@ -247,6 +249,7 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %if 0%{?fedora} >= 29
 %patch65 -p1 -b .pipewire
 %endif
+%patch66 -p1 -b .vsync
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
@@ -693,6 +696,8 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 * Fri Mar 15 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 73.0.3683.75-2
 - Enable pipewire support
 - Added a patch from fedora to fix building with pipewire support
+- Add a patch from upstream to stop vsync error spam when running on wayland
+- Disable fedora compile flags and re enable gold on rawhide due to linker bugs
 
 * Fri Mar 15 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 73.0.3683.75-1
 - Update to 73.0.3683.75
