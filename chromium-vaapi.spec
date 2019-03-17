@@ -58,7 +58,7 @@
 %global jumbo 1
 #------------------------------------------------------
 #Build debug packages for debugging
-%global debug_pkg 1
+%global debug_pkg 0
 #Allow building with Fedora compilation flags
 %global fedora_compilation_flags 0
 # Gold switch
@@ -101,8 +101,8 @@ Source15:  LICENSE
 ########################################################################################
 #Compiler settings
 # Make sure we don't encounter any bug
-BuildRequires: gcc 
-BuildRequires: gcc-c++
+BuildRequires: clang, llvm 
+BuildRequires: lld
 # Basic tools and libraries needed for building
 BuildRequires: ninja-build, nodejs, bison, gperf, hwdata
 BuildRequires: libgcc, glibc, libatomic
@@ -194,19 +194,6 @@ ExclusiveArch: x86_64
 Patch1:    enable-vaapi.patch
 # Enable support for widevine
 Patch2:    widevine.patch
-#Gcc patches area.
-#Gcc produces way too many warnings. Try to silence some of it.
-Patch8:    silencegcc.patch
-# More patches to fix chromium build here
-#Gentoo patches
-Patch9:    chromium-gcc8-r630084.patch
-Patch10:    chromium-gcc8-r630140.patch
-Patch11:    chromium-gcc8-r630249.patch
-Patch12:    chromium-gcc8-r630355.patch
-Patch13:    chromium-gcc8-r631472.patch
-Patch14:    chromium-gcc8-r631962.patch
-Patch15:    chromium-gcc8-r632385.patch
-# remove dependency on unrar. That's a nasty code.
 Patch50:  nounrar.patch
 # Bootstrap still uses python command
 Patch51:  py2-bootstrap.patch
@@ -214,13 +201,14 @@ Patch51:  py2-bootstrap.patch
 Patch52:  chromium-system-icu.patch
 # Let's brand chromium!
 Patch54:  brand.patch
-#Use gold in gn bootstrap
-Patch64: gn-gold.patch
 #Stolen from Fedora to fix building with pipewire
 # https://src.fedoraproject.org/rpms/chromium/blob/master/f/chromium-73.0.3683.75-pipewire-cstring-fix.patch
 Patch65: chromium-73.0.3683.75-pipewire-cstring-fix.patch
 # Stop Vsync error spam when chromium runs on Wayland (Reviewed upstream)
 Patch66: stopVsyncspam.patch
+#Fix chromium color
+Patch67: chromium-color_utils-use-std-sqrt.patch
+Patch68: chromium-media-fix-build-with-libstdc++.patch
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
@@ -229,14 +217,6 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ## Apply patches here ##
 %patch1 -p1 -b .vaapi
 %patch2 -p1 -b .widevine
-%patch8 -p1 -b .silencegcc
-%patch9 -p1 -b .gcc81
-%patch10 -p1 -b .gcc82
-%patch11 -p1 -b .gcc83
-%patch12 -p1 -b .gcc84
-%patch13 -p1 -b gcc85
-%patch14 -p1 -b .gcc86
-%patch15 -p1 -b .gcc87
 %patch50 -p1 -b .nounrar
 %patch51 -p1 -b .py2boot
 %if %{with system_libicu}
@@ -245,11 +225,13 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %if %{freeworld}
 %patch54 -p1 -b .brand
 %endif
-%patch64 -p1 -b .gn
+#%patch64 -p1 -b .gn
 %if 0%{?fedora} >= 29
 %patch65 -p1 -b .pipewire
 %endif
 %patch66 -p1 -b .vsync
+%patch67 -p1 -b .color
+%patch68 -p1 -b .media
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
@@ -485,6 +467,12 @@ sed -i 's|//third_party/usb_ids|/usr/share/hwdata|g' device/usb/BUILD.gn
 # Don't use static libstdc++
 sed -i '/-static-libstdc++/d' tools/gn/build/gen.py
 
+# Remove compiler flags not supported by our system clang
+  sed -i \
+    -e '/"-Wno-ignored-pragma-optimize"/d' \
+    build/config/compiler/BUILD.gn
+
+
 rmdir third_party/markupsafe
 ln -s %{python2_sitearch}/markupsafe third_party/markupsafe
 
@@ -501,8 +489,8 @@ sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"%{name}"/' $FILE
 #####################################BUILD#############################################
 %build
 #export compilar variables
-export AR=ar NM=nm
-export CC=gcc CXX=g++
+export AR=llvm-ar NM=llvm-nm AS=llvm-as
+export CC=clang CXX=clang++
 %if %{fedora_compilation_flags}
 #Build flags to make hardened binaries
 #Remove some flags which are incompatible with chromium code. 
@@ -566,10 +554,16 @@ gn_args=(
 # Gold is faulty on rawhide so disabled it.
 gn_args+=(
     is_clang=false
-    use_lld=false
+    use_lld=true
 %if %{stopgold} 
     use_gold=false
 %endif
+)
+#compiler settings
+gn_args+=(
+    is_clang=true
+    'clang_base_path = "/usr"'
+    clang_use_chrome_plugins=false
 )
 #Jumbo stuff
 gn_args+=(
