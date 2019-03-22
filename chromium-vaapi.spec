@@ -52,7 +52,7 @@
 %bcond_with system_re2
 
 #Turn on verbose mode
-%global debug_logs 1
+%global debug_logs 0
 #Allow jumbo builds
 # Enabled by default
 %global jumbo 1
@@ -67,8 +67,8 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    73.0.3683.75
-Release:    2%{?dist}
+Version:    73.0.3683.86
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -687,6 +687,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Fri Mar 22 2019 Vasiliy N. Glazov <vascom2@gmail.com> - 73.0.3683.86-1
+- Update to 73.0.3683.86
+
 * Fri Mar 15 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 73.0.3683.75-2
 - Enable pipewire support
 - Added a patch from fedora to fix building with pipewire support
