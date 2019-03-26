@@ -691,7 +691,7 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
-* Fri Mar 26 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 73.0.3683.86-2
+* Tue Mar 26 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 73.0.3683.86-2
 - Switched to GNU ar and nm to work around a bug in the current llvm in f30 #rhbz 1685029
 - Pipewire flag added to enable it by default on Fedora
 
