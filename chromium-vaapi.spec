@@ -67,8 +67,8 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    73.0.3683.86
-Release:    2%{?dist}
+Version:    73.0.3683.103
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -691,6 +691,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Fri Apr 05 2019 Vasiliy N. Glazov <vascom2@gmail.com> - 73.0.3683.103-1
+- Update to 73.0.3683.103
+
 * Tue Mar 26 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 73.0.3683.86-2
 - Switched to GNU ar and nm to work around a bug in the current llvm in f30 #rhbz 1685029
 - Pipewire flag added to enable it by default on Fedora
