@@ -179,6 +179,8 @@ BuildRequires: desktop-file-utils
 BuildRequires: libappstream-glib
 # Mojojojo need this >:(
 BuildRequires: java-1.8.0-openjdk
+# Libstdc++ static needed for linker
+BuildRequires:  libstdc++-static
 #Runtime Requirements
 Requires:       hicolor-icon-theme
 #Some recommendations
@@ -464,13 +466,11 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
 
 sed -i 's|//third_party/usb_ids|/usr/share/hwdata|g' device/usb/BUILD.gn
 
-# Don't use static libstdc++
-sed -i '/-static-libstdc++/d' tools/gn/build/gen.py
 
 # Remove compiler flags not supported by our system clang
-  sed -i \
-    -e '/"-Wno-ignored-pragma-optimize"/d' \
-    build/config/compiler/BUILD.gn
+#  sed -i \
+#    -e '/"-Wno-ignored-pragma-optimize"/d' \
+#    build/config/compiler/BUILD.gn
 
 
 rmdir third_party/markupsafe
