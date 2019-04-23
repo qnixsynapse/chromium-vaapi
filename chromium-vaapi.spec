@@ -179,6 +179,8 @@ BuildRequires: desktop-file-utils
 BuildRequires: libappstream-glib
 # Mojojojo need this >:(
 BuildRequires: java-1.8.0-openjdk
+# Libstdc++ static needed for linker
+BuildRequires:  libstdc++-static
 #Runtime Requirements
 Requires:       hicolor-icon-theme
 #Some recommendations
@@ -232,6 +234,9 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch66 -p1 -b .vsync
 %patch67 -p1 -b .color
 %patch68 -p1 -b .media
+
+sed -i 's|const std::vector<Delta> deltas_;|std::vector<Delta> deltas_;|' chrome/browser/ui/tabs/tab_strip_model_observer.h
+
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
@@ -464,13 +469,11 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
 
 sed -i 's|//third_party/usb_ids|/usr/share/hwdata|g' device/usb/BUILD.gn
 
-# Don't use static libstdc++
-sed -i '/-static-libstdc++/d' tools/gn/build/gen.py
 
 # Remove compiler flags not supported by our system clang
-  sed -i \
-    -e '/"-Wno-ignored-pragma-optimize"/d' \
-    build/config/compiler/BUILD.gn
+#  sed -i \
+#    -e '/"-Wno-ignored-pragma-optimize"/d' \
+#    build/config/compiler/BUILD.gn
 
 
 rmdir third_party/markupsafe
@@ -489,11 +492,7 @@ sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"%{name}"/' $FILE
 #####################################BUILD#############################################
 %build
 #export compilar variables
-%if 0%{?fedora} > 29
-export AR=ar NM=nm
-%else
 export AR=llvm-ar NM=llvm-nm AS=llvm-as
-%endif
 export CC=clang CXX=clang++
 %if %{fedora_compilation_flags}
 #Build flags to make hardened binaries
@@ -693,6 +692,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %changelog
 * Fri Apr 05 2019 Vasiliy N. Glazov <vascom2@gmail.com> - 73.0.3683.103-1
 - Update to 73.0.3683.103
+
+* Tue Apr 02 2019 Vasiliy N. Glazov <vascom2@gmail.com> - 73.0.3683.86-3
+- Revert switching to GNU ar and nm
 
 * Tue Mar 26 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 73.0.3683.86-2
 - Switched to GNU ar and nm to work around a bug in the current llvm in f30 #rhbz 1685029
