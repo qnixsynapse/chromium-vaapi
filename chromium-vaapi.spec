@@ -67,7 +67,7 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    73.0.3683.103
+Version:    74.0.3729.108
 Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
@@ -122,7 +122,7 @@ BuildRequires: pkgconfig(dbus-1), pkgconfig(libudev)
 BuildRequires: pkgconfig(gnome-keyring-1)
 BuildRequires: pkgconfig(libffi)
 #for vaapi
-BuildRequires:  pkgconfig(libva)
+BuildRequires: pkgconfig(libva)
 %if %{ozone}
 BuildRequires:  pkgconfig(gbm)
 BuildRequires:  pkgconfig(wayland-client)
@@ -206,11 +206,9 @@ Patch54:  brand.patch
 #Stolen from Fedora to fix building with pipewire
 # https://src.fedoraproject.org/rpms/chromium/blob/master/f/chromium-73.0.3683.75-pipewire-cstring-fix.patch
 Patch65: chromium-73.0.3683.75-pipewire-cstring-fix.patch
-# Stop Vsync error spam when chromium runs on Wayland (Reviewed upstream)
-Patch66: stopVsyncspam.patch
-#Fix chromium color
-Patch67: chromium-color_utils-use-std-sqrt.patch
-Patch68: chromium-media-fix-build-with-libstdc++.patch
+# Update Linux Seccomp syscall restrictions to EPERM posix_spawn/vfork
+Patch66: chromium-glibc-2.29.patch
+
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
@@ -227,15 +225,15 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %if %{freeworld}
 %patch54 -p1 -b .brand
 %endif
-#%patch64 -p1 -b .gn
 %if 0%{?fedora} >= 29
 %patch65 -p1 -b .pipewire
 %endif
-%patch66 -p1 -b .vsync
-%patch67 -p1 -b .color
-%patch68 -p1 -b .media
+%patch66 -p1 -b .glibc
 
+%if 0%{?fedora} >= 30
+# Add a workaround for a race condition in clang-llvm8+ compiler
 sed -i 's|const std::vector<Delta> deltas_;|std::vector<Delta> deltas_;|' chrome/browser/ui/tabs/tab_strip_model_observer.h
+%endif
 
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
@@ -269,7 +267,7 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/angle/src/third_party/compiler \
     third_party/angle/src/third_party/libXNVCtrl \
     third_party/angle/src/third_party/trace_event \
-    third_party/angle/third_party/glslang \
+    third_party/glslang \
     third_party/angle/third_party/spirv-headers \
     third_party/angle/third_party/spirv-tools \
     third_party/angle/third_party/vulkan-headers \
@@ -302,8 +300,10 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/crashpad/crashpad/third_party/zlib \
     third_party/crc32c \
     third_party/cros_system_api \
+    third_party/dav1d \
     third_party/devscripts \
     third_party/dom_distiller_js \
+    third_party/emoji-segmenter \
 %if !%{with system_ffmpeg}
     third_party/ffmpeg \
 %endif
@@ -642,7 +642,7 @@ install -m 644 %{target}/v8_context_snapshot.bin %{buildroot}%{chromiumdir}/
 install -m 644 %{target}/*.pak %{buildroot}%{chromiumdir}/
 install -m 644 %{target}/locales/*.pak %{buildroot}%{chromiumdir}/locales/
 install -m 644 %{target}/xdg*  %{buildroot}%{chromiumdir}/
-install -m 644 out/Release/MEIPreload/* %{buildroot}%{chromiumdir}/MEIPreload/
+install -m 644 %{target}/MEIPreload/* %{buildroot}%{chromiumdir}/MEIPreload/
 for i in 16 32; do
     mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
     install -m 644 chrome/app/theme/default_100_percent/chromium/product_logo_$i.png \
@@ -695,6 +695,10 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Thu Apr 25 2019 Vasiliy N. Glazov <vascom2@gmail.com> - 74.0.3729.108-1
+- Update to 74.0.3729.108
+- Install missing MEIPreload component
+
 * Fri Apr 05 2019 Vasiliy N. Glazov <vascom2@gmail.com> - 73.0.3683.103-1
 - Update to 73.0.3683.103
 
@@ -823,3 +827,5 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 
 * Wed Aug 29 2018 Akarshan Biswas <akarshan.biswas@hotmail.com> 68.0.3440.106-1
 - Deleted provides and excludes and added conflict
+
+
