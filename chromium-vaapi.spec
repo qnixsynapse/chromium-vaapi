@@ -613,6 +613,7 @@ ninja  %{_smp_mflags} -C %{target}   chrome chrome_sandbox chromedriver
 %install
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{chromiumdir}/locales
+mkdir -p %{buildroot}%{chromiumdir}/MEIPreload
 mkdir -p %{buildroot}%{_mandir}/man1
 mkdir -p %{buildroot}%{_metainfodir}
 mkdir -p %{buildroot}%{_datadir}/applications
@@ -641,6 +642,7 @@ install -m 644 %{target}/v8_context_snapshot.bin %{buildroot}%{chromiumdir}/
 install -m 644 %{target}/*.pak %{buildroot}%{chromiumdir}/
 install -m 644 %{target}/locales/*.pak %{buildroot}%{chromiumdir}/locales/
 install -m 644 %{target}/xdg*  %{buildroot}%{chromiumdir}/
+install -m 644 out/Release/MEIPreload/* %{buildroot}%{chromiumdir}/MEIPreload/
 for i in 16 32; do
     mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
     install -m 644 chrome/app/theme/default_100_percent/chromium/product_logo_$i.png \
@@ -686,6 +688,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/*.pak
 %{chromiumdir}/xdg-mime
 %{chromiumdir}/xdg-settings
+%dir %{chromiumdir}/MEIPreload
+%{chromiumdir}/MEIPreload/manifest.json
+%{chromiumdir}/MEIPreload/preloaded_data.pb
 %dir %{chromiumdir}/locales
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
