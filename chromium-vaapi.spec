@@ -234,7 +234,6 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 sed -i 's|const std::vector<Delta> deltas_;|std::vector<Delta> deltas_;|' chrome/browser/ui/tabs/tab_strip_model_observer.h
 %endif
 
->>>>>>> master
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
