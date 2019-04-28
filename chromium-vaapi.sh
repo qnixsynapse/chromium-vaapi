@@ -56,6 +56,7 @@ exec 2> >(exec cat >&2)
 CHROMIUM_DISTRO_FLAGS+=" --enable-plugins \
                          --enable-extensions \
                          --enable-user-scripts \
+                         --enable-features=WebRTCPipeWireCapturer \
                          --enable-printing \
                          --enable-gpu-rasterization \
                          --enable-sync"

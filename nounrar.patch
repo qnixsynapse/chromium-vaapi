@@ -127,13 +127,13 @@ index 158cbfc6d157..6d8b0df7c59e 100644
        "sandboxed_zip_analyzer.cc",
        "sandboxed_zip_analyzer.h",
      ]
-@@ -35,7 +33,6 @@ source_set("unit_tests") {
+@@ -49,7 +47,6 @@ source_set("unit_tests") {
  
-   sources = [
-     "sandboxed_dmg_analyzer_mac_unittest.cc",
--    "sandboxed_rar_analyzer_unittest.cc",
-     "sandboxed_zip_analyzer_unittest.cc",
-   ]
+     sources = [
+       "sandboxed_dmg_analyzer_mac_unittest.cc",
+-      "sandboxed_rar_analyzer_unittest.cc",
+       "sandboxed_zip_analyzer_unittest.cc",
+     ]
  
 diff --git a/chrome/services/file_util/public/mojom/safe_archive_analyzer.mojom b/chrome/services/file_util/public/mojom/safe_archive_analyzer.mojom
 index 266160351e18..15d5aaba3657 100644
@@ -186,3 +186,5 @@ index 94d6ec0e16f8..2eda4f378bcc 100644
  
    const std::unique_ptr<service_manager::ServiceContextRef> service_ref_;
  
+
+
