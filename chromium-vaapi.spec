@@ -59,15 +59,11 @@
 #------------------------------------------------------
 #Build debug packages for debugging
 %global debug_pkg 0
-#Allow building with Fedora compilation flags
-%global fedora_compilation_flags 0
-# Gold switch
-%global stopgold 0
 # Enable building with ozone support
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    74.0.3729.108
+Version:    74.0.3729.131
 Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
@@ -76,7 +72,7 @@ URL:        https://www.chromium.org/Home
 Source0:    https://commondatastorage.googleapis.com/chromium-browser-official/chromium-%{version}.tar.xz
 %else
 # Unfortunately, Fedora & Copr forbids uploading sources with patent-encumbered
-# ffmpeg code even if they are never compiled and linked to target binraies,
+# ffmpeg code even if they are never compiled and linked to target binaries,
 # so we must repackage upstream tarballs to satisfy this requirement. However,
 # we cannot simply delete all code of ffmpeg because this will disable support
 # for some commonly-used free codecs such as Ogg Theora. Instead, helper
@@ -499,25 +495,7 @@ sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"%{name}"/' $FILE
 #export compilar variables
 export AR=llvm-ar NM=llvm-nm AS=llvm-as
 export CC=clang CXX=clang++
-%if %{fedora_compilation_flags}
-#Build flags to make hardened binaries
-#Remove some flags which are incompatible with chromium code. 
-CBUILDFLAGS="$(echo '%{__global_cflags}' | sed -e 's/-fexceptions//' \
-                                               -e 's/-Werror=format-security//' \
-                                               -e 's/-pipe//' \
-                                               -e 's/-g1record-g1cc-switches//' \
-                                               -e 's/^-g / /g' -e 's/ -g / /g' -e 's/ -g$//g')"
-CXXBUILDFLAGS="$(echo '%{?__global_cxxflags}%{!?__global_cxxflags:%{__global_cflags}}' | sed -e 's/-fexceptions//' \
-                                                                                             -e 's/-Werror=format-security//' \
-                                                                                             -e 's/-pipe//' \
-                                                                                             -e 's/-g1record-g1cc-switches//' \
-                                                                                             -e 's/^-g / /g' -e 's/ -g / /g' -e 's/ -g$//g')"   
-export CFLAGS="${CBUILDFLAGS}"
-export CXXFLAGS="${CXXBUILDFLAGS} -fpermissive"
-export LDFLAGS='%{__global_ldflags}'
-%else
 export CXXFLAGS=$CXXFLAGS" -fpermissive"
-%endif
 gn_args=(
     is_debug=false
     use_vaapi=true
@@ -559,17 +537,11 @@ gn_args=(
     'google_default_client_id="%{default_client_id}"'
     'google_default_client_secret="%{default_client_secret}"'
 )
-# Gold is faulty on rawhide so disabled it.
-gn_args+=(
-    is_clang=false
-    use_lld=true
-%if %{stopgold} 
-    use_gold=false
-%endif
-)
+
 #compiler settings
 gn_args+=(
     is_clang=true
+    use_lld=true
     'clang_base_path = "/usr"'
     clang_use_chrome_plugins=false
 )
@@ -590,8 +562,7 @@ gn_args+=(
 %endif
 )
 
-# Ozone stuff
-# Tracking bug : https://github.com/Igalia/chromium/issues/512
+# Ozone stuff : Whole work is done completely upstream.
 gn_args+=(
 %if %{ozone}
     use_ozone=true
@@ -629,7 +600,6 @@ install -m 644 %{SOURCE11} %{buildroot}%{_metainfodir}
 sed -e "s|@@MENUNAME@@|%{name}|g" -e "s|@@PACKAGE@@|%{name}|g" \
     chrome/app/resources/manpage.1.in > chrome.1
 install -m 644 chrome.1 %{buildroot}%{_mandir}/man1/%{name}.1
-#Using the template from the source. Still doesn't help in fixing.
 sed -e "s|@@MENUNAME@@|%{name}|g" -e "s|@@PACKAGE@@|%{name}|g" -e "s|@@USR_BIN_SYMLINK_NAME@@|%{name}|g" \
     chrome/installer/linux/common/desktop.template > %{name}.desktop
 desktop-file-install --dir=%{buildroot}%{_datadir}/applications %{name}.desktop
@@ -700,6 +670,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Sun May 05 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 74.0.3729.131-1
+- Update to 74.0.3729.131 and spec cleanup
+
 * Thu Apr 25 2019 Vasiliy N. Glazov <vascom2@gmail.com> - 74.0.3729.108-1
 - Update to 74.0.3729.108
 - Install missing MEIPreload component
