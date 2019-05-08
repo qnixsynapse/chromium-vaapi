@@ -204,6 +204,9 @@ Patch54:  brand.patch
 Patch65: chromium-73.0.3683.75-pipewire-cstring-fix.patch
 # Update Linux Seccomp syscall restrictions to EPERM posix_spawn/vfork
 Patch66: chromium-glibc-2.29.patch
+# Fix some chromium regressions against certain type of window compositors
+# Patch status: backported from https://chromium-review.googlesource.com/c/chromium/src/+/1597388
+Patch67: fixwindowflashm74.patch
 
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
@@ -225,6 +228,7 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch65 -p1 -b .pipewire
 %endif
 %patch66 -p1 -b .glibc
+%patch67 -p1 -b .fwfm74
 
 %if 0%{?fedora} >= 30
 # Add a workaround for a race condition in clang-llvm8+ compiler
