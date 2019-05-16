@@ -63,7 +63,7 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    74.0.3729.131
+Version:    74.0.3729.157
 Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
@@ -204,6 +204,9 @@ Patch54:  brand.patch
 Patch65: chromium-73.0.3683.75-pipewire-cstring-fix.patch
 # Update Linux Seccomp syscall restrictions to EPERM posix_spawn/vfork
 Patch66: chromium-glibc-2.29.patch
+# Fix some chromium regressions against certain type of window compositors
+# Patch status: backported from https://chromium-review.googlesource.com/c/chromium/src/+/1597388
+Patch67: fixwindowflashm74.patch
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
@@ -224,6 +227,7 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch65 -p1 -b .pipewire
 %endif
 %patch66 -p1 -b .glibc
+%patch67 -p1 -b .fwfm74
 
 %if 0%{?fedora} >= 30
 # Add a workaround for a race condition in clang-llvm8+ compiler
@@ -670,6 +674,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Thu May 16 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 74.0.3729.157-1
+- Update to 74.0.3729.157
+
 * Sun May 05 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 74.0.3729.131-1
 - Update to 74.0.3729.131 and spec cleanup
 

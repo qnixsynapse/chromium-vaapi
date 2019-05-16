@@ -58,7 +58,6 @@ CHROMIUM_DISTRO_FLAGS+=" --enable-plugins \
                          --enable-user-scripts \
                          --enable-features=WebRTCPipeWireCapturer \
                          --enable-printing \
-                         --enable-gpu-rasterization \
                          --enable-sync"
 
 exec -a "$0" "@@CHROMIUMDIR@@/$(basename "$0" | sed 's/\.sh$//')" $CHROMIUM_DISTRO_FLAGS "$@"
