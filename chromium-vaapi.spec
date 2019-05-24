@@ -207,6 +207,7 @@ Patch66: chromium-glibc-2.29.patch
 # Fix some chromium regressions against certain type of window compositors
 # Patch status: backported from https://chromium-review.googlesource.com/c/chromium/src/+/1597388
 Patch67: fixwindowflashm74.patch
+Patch68: fix-gn-74.patch
 
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
@@ -229,6 +230,7 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %endif
 %patch66 -p1 -b .glibc
 %patch67 -p1 -b .fwfm74
+%patch68 -p1 -b .fixgn74
 
 %if 0%{?fedora} >= 30
 # Add a workaround for a race condition in clang-llvm8+ compiler
