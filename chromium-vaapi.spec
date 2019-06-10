@@ -63,7 +63,7 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    74.0.3729.169
+Version:    75.0.3770.80
 Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
@@ -191,7 +191,7 @@ ExclusiveArch: x86_64
 # Enable video acceleration on chromium for Linux
 Patch1:    enable-vaapi.patch
 # Enable support for widevine
-Patch2:    widevine.patch
+Patch2:   widevine.patch
 Patch50:  nounrar.patch
 # Bootstrap still uses python command
 Patch51:  py2-bootstrap.patch
@@ -202,12 +202,10 @@ Patch54:  brand.patch
 #Stolen from Fedora to fix building with pipewire
 # https://src.fedoraproject.org/rpms/chromium/blob/master/f/chromium-73.0.3683.75-pipewire-cstring-fix.patch
 Patch65: chromium-73.0.3683.75-pipewire-cstring-fix.patch
-# Update Linux Seccomp syscall restrictions to EPERM posix_spawn/vfork
-Patch66: chromium-glibc-2.29.patch
 # Fix some chromium regressions against certain type of window compositors
 # Patch status: backported from https://chromium-review.googlesource.com/c/chromium/src/+/1597388
 Patch67: fixwindowflashm74.patch
-Patch68: fix-gn-74.patch
+Patch68: libstdc.patch
 
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
@@ -228,9 +226,8 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %if 0%{?fedora} >= 29
 %patch65 -p1 -b .pipewire
 %endif
-%patch66 -p1 -b .glibc
 %patch67 -p1 -b .fwfm74
-%patch68 -p1 -b .fixgn74
+%patch68 -p1 -b .libstdc
 
 %if 0%{?fedora} >= 30
 # Add a workaround for a race condition in clang-llvm8+ compiler
@@ -277,6 +274,7 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/angle/third_party/vulkan-tools \
     third_party/angle/third_party/vulkan-validation-layers \
     third_party/apple_apsl \
+    third_party/axe-core \
     third_party/boringssl \
     third_party/boringssl/src/third_party/fiat \
     third_party/blink \
@@ -299,9 +297,11 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/cld_3 \
     third_party/closure_compiler \
     third_party/crashpad \
+    third_party/crashpad/crashpad/third_party/lss \
     third_party/crashpad/crashpad/third_party/zlib \
     third_party/crc32c \
     third_party/cros_system_api \
+    third_party/dawn \
     third_party/dav1d \
     third_party/devscripts \
     third_party/dom_distiller_js \
@@ -309,7 +309,6 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
 %if !%{with system_ffmpeg}
     third_party/ffmpeg \
 %endif
-    third_party/fips181 \
     third_party/flatbuffers \
     third_party/flot \
     third_party/freetype \
@@ -381,6 +380,7 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/pdfium/third_party/libtiff \
     third_party/pdfium/third_party/skia_shared \
     third_party/perfetto \
+    third_party/pffft \
 %if !%{with system_ply}
     third_party/ply \
 %endif
@@ -671,6 +671,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Sat Jun 08 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 75.0.3770.80-1
+- Update to 75.0.3770.80
+
 * Fri May 24 2019 Vasiliy N. Glazov <vascom2@gmail.com> - 74.0.3729.169-1
 - Update to 74.0.3729.169
 

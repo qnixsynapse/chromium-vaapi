@@ -1,6 +1,6 @@
 From 90e226ba50c98b5e60f74f9dce998b17117f9051 Mon Sep 17 00:00:00 2001
 From: Peng Huang <penghuang@chromium.org>
-Date: Tue, 07 May 2019 13:16:21 +0000
+Date: Tue, 7 May 2019 13:16:21 +0000
 Subject: [PATCH] Fix window flash for some WMs
 
 Bug: 956061
@@ -10,12 +10,15 @@ Commit-Queue: Peng Huang <penghuang@chromium.org>
 Reviewed-by: Antoine Labour <piman@chromium.org>
 Cr-Commit-Position: refs/heads/master@{#657215}
 ---
+ ui/gl/BUILD.gn          |  5 ++++-
+ ui/gl/gl_surface_glx.cc | 41 ++++++++++++++++++++++++++++-------------
+ 2 files changed, 32 insertions(+), 14 deletions(-)
 
 diff --git a/ui/gl/BUILD.gn b/ui/gl/BUILD.gn
-index 50df0e4..1753dd48 100644
+index 50df0e4085..1753dd480b 100644
 --- a/ui/gl/BUILD.gn
 +++ b/ui/gl/BUILD.gn
-@@ -274,7 +274,10 @@
+@@ -274,7 +274,10 @@ jumbo_component("gl") {
        "//build/config/linux:xext",
      ]
  
@@ -28,7 +31,7 @@ index 50df0e4..1753dd48 100644
    if (is_win) {
      sources += [
 diff --git a/ui/gl/gl_surface_glx.cc b/ui/gl/gl_surface_glx.cc
-index f4c13be..777bf76 100644
+index f4c13bed18..777bf767cb 100644
 --- a/ui/gl/gl_surface_glx.cc
 +++ b/ui/gl/gl_surface_glx.cc
 @@ -21,6 +21,7 @@
@@ -39,7 +42,7 @@ index f4c13be..777bf76 100644
  #include "ui/events/platform/platform_event_source.h"
  #include "ui/gfx/x/x11.h"
  #include "ui/gfx/x/x11_connection.h"
-@@ -431,7 +432,9 @@
+@@ -431,7 +432,9 @@ bool GLSurfaceGLX::InitializeOneOff() {
    }
  
    const XVisualInfo& visual_info =
@@ -50,7 +53,7 @@ index f4c13be..777bf76 100644
    g_visual = visual_info.visual;
    g_depth = visual_info.depth;
    g_colormap =
-@@ -581,18 +584,30 @@
+@@ -581,18 +584,30 @@ bool NativeViewGLSurfaceGLX::Initialize(GLSurfaceFormat format) {
    }
    size_ = gfx::Size(attributes.width, attributes.height);
  
