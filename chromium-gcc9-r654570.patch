@@ -20,7 +20,7 @@ Cr-Commit-Position: refs/heads/master@{#654570}
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/cc/scheduler/compositor_frame_reporting_controller.cc b/cc/scheduler/compositor_frame_reporting_controller.cc
-index f1587ed158..1b17021fd2 100644
+index f1587ed158d4..1b17021fd229 100644
 --- a/cc/scheduler/compositor_frame_reporting_controller.cc
 +++ b/cc/scheduler/compositor_frame_reporting_controller.cc
 @@ -31,8 +31,8 @@ void CompositorFrameReportingController::WillBeginImplFrame() {
@@ -34,3 +34,6 @@ index f1587ed158..1b17021fd2 100644
    reporters_[PipelineStage::kBeginImplFrame]->StartStage(
        "SendBeginMainFrameToCommit");
    AdvanceReporterStage(PipelineStage::kBeginImplFrame,
+-- 
+2.21.0
+

@@ -58,13 +58,13 @@
 %global jumbo 1
 #------------------------------------------------------
 #Build debug packages for debugging
-%global debug_pkg 0
+%global debug_pkg 1
 # Enable building with ozone support
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    75.0.3770.80
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -97,8 +97,7 @@ Source15:  LICENSE
 ########################################################################################
 #Compiler settings
 # Make sure we don't encounter any bug
-BuildRequires: clang, llvm 
-BuildRequires: lld
+BuildRequires: gcc-c++
 # Basic tools and libraries needed for building
 BuildRequires: ninja-build, nodejs, bison, gperf, hwdata
 BuildRequires: libgcc, glibc, libatomic
@@ -180,8 +179,7 @@ BuildRequires:  libstdc++-static
 #Runtime Requirements
 Requires:       hicolor-icon-theme
 #Some recommendations
-Recommends:    libva-intel-hybrid-driver%{?_isa}
-Recommends:    libva-intel-driver%{?_isa}
+Recommends:    libva-utils
 %if !%{debug_pkg}
 %global debug_package %{nil}
 %endif
@@ -205,13 +203,17 @@ Patch65: chromium-73.0.3683.75-pipewire-cstring-fix.patch
 # Fix some chromium regressions against certain type of window compositors
 # Patch status: backported from https://chromium-review.googlesource.com/c/chromium/src/+/1597388
 Patch67: fixwindowflashm74.patch
-Patch68: libstdc.patch
+# GCC patches
+Patch70:    chromium-angle-gcc9.patch
+Patch71:    chromium-gcc9-r654570.patch
+Patch72:    chromium-gcc9-r666279.patch
+Patch73:    chromium-gcc9-r666714.patch
 
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
 %prep
-%setup -q -n chromium-%{version} 
+%autosetup -n chromium-%{version} -N
 ## Apply patches here ##
 %patch1 -p1 -b .vaapi
 %patch2 -p1 -b .widevine
@@ -227,12 +229,12 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch65 -p1 -b .pipewire
 %endif
 %patch67 -p1 -b .fwfm74
-%patch68 -p1 -b .libstdc
+# GCC patches area
+%patch70 -p1 -b .gcc1
+%patch71 -p1 -b .gcc2
+%patch72 -p1 -b .gcc3
+%patch73 -p1 -b .gcc4
 
-%if 0%{?fedora} >= 30
-# Add a workaround for a race condition in clang-llvm8+ compiler
-sed -i 's|const std::vector<Delta> deltas_;|std::vector<Delta> deltas_;|' chrome/browser/ui/tabs/tab_strip_model_observer.h
-%endif
 
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
@@ -471,13 +473,6 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
 
 sed -i 's|//third_party/usb_ids|/usr/share/hwdata|g' device/usb/BUILD.gn
 
-
-# Remove compiler flags not supported by our system clang
-#  sed -i \
-#    -e '/"-Wno-ignored-pragma-optimize"/d' \
-#    build/config/compiler/BUILD.gn
-
-
 rmdir third_party/markupsafe
 ln -s %{python2_sitearch}/markupsafe third_party/markupsafe
 
@@ -494,9 +489,12 @@ sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"%{name}"/' $FILE
 #####################################BUILD#############################################
 %build
 #export compilar variables
-export AR=llvm-ar NM=llvm-nm AS=llvm-as
-export CC=clang CXX=clang++
-export CXXFLAGS=$CXXFLAGS" -fpermissive"
+export AR=ar NM=nm AS=as
+export CC=gcc CXX=g++
+
+# GN needs gold to bootstrap
+export LDFLAGS="$LDFLAGS -fuse-ld=gold"
+
 gn_args=(
     is_debug=false
     use_vaapi=true
@@ -530,7 +528,7 @@ gn_args=(
     fatal_linker_warnings=false
     treat_warnings_as_errors=false
     linux_use_bundled_binutils=false
-    remove_webcore_debug_symbols=true
+    blink_symbol_level = 0
     fieldtrial_testing_like_official_build=true
     'custom_toolchain="//build/toolchain/linux/unbundle:default"'
     'host_toolchain="//build/toolchain/linux/unbundle:default"'
@@ -540,11 +538,12 @@ gn_args=(
 )
 
 #compiler settings
+# 'clang_base_path = "/usr"'
+# use_lld=false
+  #  clang_use_chrome_plugins=false
+# Switched back to GCC, clang itself is broken
 gn_args+=(
-    is_clang=true
-    use_lld=true
-    'clang_base_path = "/usr"'
-    clang_use_chrome_plugins=false
+    is_clang=false
 )
 #Jumbo stuff
 gn_args+=(
@@ -671,6 +670,10 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Wed Jun 12 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 75.0.3770.80-2
+- Use %%autosetup and switch back to GCC (build fails on clang often which makes it non beneficial to GCC)
+- Change recommends to libva-utils since acceleration is broken on few intel devices
+
 * Sat Jun 08 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 75.0.3770.80-1
 - Update to 75.0.3770.80
 
