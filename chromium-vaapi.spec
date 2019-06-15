@@ -31,23 +31,15 @@
 
 # Allow testing whether icu can be unbundled
 # A patch fix building so enabled by default for Fedora 30
-# Need icu version >= 63.1
-%if 0%{?fedora} >= 30
-%bcond_without system_libicu
-%else
+# Need icu version >= 64
 %bcond_with system_libicu
-%endif
 # Allow testing whether libvpx can be unbundled
 %bcond_with system_libvpx
 # Allow testing whether ffmpeg can be unbundled
 %bcond_with system_ffmpeg
 #Allow minizip to be unbundled
 #mini-compat is going to be removed from fedora 30!
-%if 0%{?fedora} >= 30
 %bcond_with system_minizip
-%else
-%bcond_without system_minizip
-%endif
 # Need re2 ver. 2016.07.21 for re2::LazyRE2 
 %bcond_with system_re2
 
@@ -58,12 +50,12 @@
 %global jumbo 1
 #------------------------------------------------------
 #Build debug packages for debugging
-%global debug_pkg 0
+%global debug_pkg 1
 # Enable building with ozone support
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    74.0.3729.169
+Version:    75.0.3770.90
 Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
@@ -97,15 +89,14 @@ Source15:  LICENSE
 ########################################################################################
 #Compiler settings
 # Make sure we don't encounter any bug
-BuildRequires: clang, llvm 
-BuildRequires: lld
+BuildRequires: gcc-c++
 # Basic tools and libraries needed for building
 BuildRequires: ninja-build, nodejs, bison, gperf, hwdata
 BuildRequires: libgcc, glibc, libatomic
 BuildRequires: libcap-devel, cups-devel, alsa-lib-devel
 BuildRequires: mesa-libGL-devel, mesa-libEGL-devel
 %if %{with system_minizip}
-BuildRequires:	minizip-devel
+BuildRequires:	minizip-compat-devel
 %endif
 # Pipewire need this.
 %if 0%{?fedora} >= 29
@@ -180,8 +171,7 @@ BuildRequires:  libstdc++-static
 #Runtime Requirements
 Requires:       hicolor-icon-theme
 #Some recommendations
-Recommends:    libva-intel-hybrid-driver%{?_isa}
-Recommends:    libva-intel-driver%{?_isa}
+Recommends:    libva-utils
 %if !%{debug_pkg}
 %global debug_package %{nil}
 %endif
@@ -191,7 +181,7 @@ ExclusiveArch: x86_64
 # Enable video acceleration on chromium for Linux
 Patch1:    enable-vaapi.patch
 # Enable support for widevine
-Patch2:    widevine.patch
+Patch2:   widevine.patch
 Patch50:  nounrar.patch
 # Bootstrap still uses python command
 Patch51:  py2-bootstrap.patch
@@ -202,18 +192,19 @@ Patch54:  brand.patch
 #Stolen from Fedora to fix building with pipewire
 # https://src.fedoraproject.org/rpms/chromium/blob/master/f/chromium-73.0.3683.75-pipewire-cstring-fix.patch
 Patch65: chromium-73.0.3683.75-pipewire-cstring-fix.patch
-# Update Linux Seccomp syscall restrictions to EPERM posix_spawn/vfork
-Patch66: chromium-glibc-2.29.patch
-# Fix some chromium regressions against certain type of window compositors
-# Patch status: backported from https://chromium-review.googlesource.com/c/chromium/src/+/1597388
-Patch67: fixwindowflashm74.patch
-Patch68: fix-gn-74.patch
+# Fix header
+Patch68: Add-missing-header-to-fix-webrtc-build.patch
+# GCC patches
+Patch70:    chromium-angle-gcc9.patch
+Patch71:    chromium-gcc9-r654570.patch
+Patch72:    chromium-gcc9-r666279.patch
+Patch73:    chromium-gcc9-r666714.patch
 
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
 %prep
-%setup -q -n chromium-%{version} 
+%autosetup -n chromium-%{version} -N
 ## Apply patches here ##
 %patch1 -p1 -b .vaapi
 %patch2 -p1 -b .widevine
@@ -228,14 +219,13 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %if 0%{?fedora} >= 29
 %patch65 -p1 -b .pipewire
 %endif
-%patch66 -p1 -b .glibc
-%patch67 -p1 -b .fwfm74
-%patch68 -p1 -b .fixgn74
+%patch68 -p1 -b .socket
+# GCC patches area
+%patch70 -p1 -b .gcc1
+%patch71 -p1 -b .gcc2
+%patch72 -p1 -b .gcc3
+%patch73 -p1 -b .gcc4
 
-%if 0%{?fedora} >= 30
-# Add a workaround for a race condition in clang-llvm8+ compiler
-sed -i 's|const std::vector<Delta> deltas_;|std::vector<Delta> deltas_;|' chrome/browser/ui/tabs/tab_strip_model_observer.h
-%endif
 
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
@@ -277,6 +267,7 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/angle/third_party/vulkan-tools \
     third_party/angle/third_party/vulkan-validation-layers \
     third_party/apple_apsl \
+    third_party/axe-core \
     third_party/boringssl \
     third_party/boringssl/src/third_party/fiat \
     third_party/blink \
@@ -299,9 +290,11 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/cld_3 \
     third_party/closure_compiler \
     third_party/crashpad \
+    third_party/crashpad/crashpad/third_party/lss \
     third_party/crashpad/crashpad/third_party/zlib \
     third_party/crc32c \
     third_party/cros_system_api \
+    third_party/dawn \
     third_party/dav1d \
     third_party/devscripts \
     third_party/dom_distiller_js \
@@ -309,7 +302,6 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
 %if !%{with system_ffmpeg}
     third_party/ffmpeg \
 %endif
-    third_party/fips181 \
     third_party/flatbuffers \
     third_party/flot \
     third_party/freetype \
@@ -381,6 +373,7 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/pdfium/third_party/libtiff \
     third_party/pdfium/third_party/skia_shared \
     third_party/perfetto \
+    third_party/pffft \
 %if !%{with system_ply}
     third_party/ply \
 %endif
@@ -471,13 +464,6 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
 
 sed -i 's|//third_party/usb_ids|/usr/share/hwdata|g' device/usb/BUILD.gn
 
-
-# Remove compiler flags not supported by our system clang
-#  sed -i \
-#    -e '/"-Wno-ignored-pragma-optimize"/d' \
-#    build/config/compiler/BUILD.gn
-
-
 rmdir third_party/markupsafe
 ln -s %{python2_sitearch}/markupsafe third_party/markupsafe
 
@@ -494,9 +480,12 @@ sed -i.orig -e 's/getenv("CHROME_VERSION_EXTRA")/"%{name}"/' $FILE
 #####################################BUILD#############################################
 %build
 #export compilar variables
-export AR=llvm-ar NM=llvm-nm AS=llvm-as
-export CC=clang CXX=clang++
-export CXXFLAGS=$CXXFLAGS" -fpermissive"
+export AR=ar NM=nm AS=as
+export CC=gcc CXX=g++
+
+# GN needs gold to bootstrap
+export LDFLAGS="$LDFLAGS -fuse-ld=gold"
+
 gn_args=(
     is_debug=false
     use_vaapi=true
@@ -530,7 +519,7 @@ gn_args=(
     fatal_linker_warnings=false
     treat_warnings_as_errors=false
     linux_use_bundled_binutils=false
-    remove_webcore_debug_symbols=true
+    blink_symbol_level = 0
     fieldtrial_testing_like_official_build=true
     'custom_toolchain="//build/toolchain/linux/unbundle:default"'
     'host_toolchain="//build/toolchain/linux/unbundle:default"'
@@ -540,11 +529,12 @@ gn_args=(
 )
 
 #compiler settings
+# 'clang_base_path = "/usr"'
+# use_lld=false
+  #  clang_use_chrome_plugins=false
+# Switched back to GCC, clang itself is broken
 gn_args+=(
-    is_clang=true
-    use_lld=true
-    'clang_base_path = "/usr"'
-    clang_use_chrome_plugins=false
+    is_clang=false
 )
 #Jumbo stuff
 gn_args+=(
@@ -671,6 +661,18 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Sat Jun 15 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 75.0.3770.90-1
+- Update to 75.0.3770.90
+- Re bundle icu; requires 64 and up
+- Use system minizip again
+
+* Wed Jun 12 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 75.0.3770.80-2
+- Use %%autosetup and switch back to GCC (build fails on clang often which makes it non beneficial to GCC)
+- Change recommends to libva-utils since acceleration is broken on few intel devices
+
+* Sat Jun 08 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 75.0.3770.80-1
+- Update to 75.0.3770.80
+
 * Fri May 24 2019 Vasiliy N. Glazov <vascom2@gmail.com> - 74.0.3729.169-1
 - Update to 74.0.3729.169
 
