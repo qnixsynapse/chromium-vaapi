@@ -31,23 +31,15 @@
 
 # Allow testing whether icu can be unbundled
 # A patch fix building so enabled by default for Fedora 30
-# Need icu version >= 63.1
-%if 0%{?fedora} >= 30
-%bcond_without system_libicu
-%else
+# Need icu version >= 64
 %bcond_with system_libicu
-%endif
 # Allow testing whether libvpx can be unbundled
 %bcond_with system_libvpx
 # Allow testing whether ffmpeg can be unbundled
 %bcond_with system_ffmpeg
 #Allow minizip to be unbundled
 #mini-compat is going to be removed from fedora 30!
-%if 0%{?fedora} >= 30
 %bcond_with system_minizip
-%else
-%bcond_without system_minizip
-%endif
 # Need re2 ver. 2016.07.21 for re2::LazyRE2 
 %bcond_with system_re2
 
@@ -63,8 +55,8 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    75.0.3770.80
-Release:    2%{?dist}
+Version:    75.0.3770.90
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -104,7 +96,7 @@ BuildRequires: libgcc, glibc, libatomic
 BuildRequires: libcap-devel, cups-devel, alsa-lib-devel
 BuildRequires: mesa-libGL-devel, mesa-libEGL-devel
 %if %{with system_minizip}
-BuildRequires:	minizip-devel
+BuildRequires:	minizip-compat-devel
 %endif
 # Pipewire need this.
 %if 0%{?fedora} >= 29
@@ -200,9 +192,8 @@ Patch54:  brand.patch
 #Stolen from Fedora to fix building with pipewire
 # https://src.fedoraproject.org/rpms/chromium/blob/master/f/chromium-73.0.3683.75-pipewire-cstring-fix.patch
 Patch65: chromium-73.0.3683.75-pipewire-cstring-fix.patch
-# Fix some chromium regressions against certain type of window compositors
-# Patch status: backported from https://chromium-review.googlesource.com/c/chromium/src/+/1597388
-Patch67: fixwindowflashm74.patch
+# Fix header
+Patch68: Add-missing-header-to-fix-webrtc-build.patch
 # GCC patches
 Patch70:    chromium-angle-gcc9.patch
 Patch71:    chromium-gcc9-r654570.patch
@@ -228,7 +219,7 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %if 0%{?fedora} >= 29
 %patch65 -p1 -b .pipewire
 %endif
-%patch67 -p1 -b .fwfm74
+%patch68 -p1 -b .socket
 # GCC patches area
 %patch70 -p1 -b .gcc1
 %patch71 -p1 -b .gcc2
@@ -670,6 +661,11 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Sat Jun 15 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 75.0.3770.90-1
+- Update to 75.0.3770.90
+- Re bundle icu; requires 64 and up
+- Use system minizip again
+
 * Wed Jun 12 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 75.0.3770.80-2
 - Use %%autosetup and switch back to GCC (build fails on clang often which makes it non beneficial to GCC)
 - Change recommends to libva-utils since acceleration is broken on few intel devices
