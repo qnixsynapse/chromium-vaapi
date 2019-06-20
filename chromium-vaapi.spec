@@ -55,7 +55,7 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    75.0.3770.90
+Version:    75.0.3770.100
 Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
@@ -661,6 +661,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Wed Jun 19 2019 Vasiliy N. Glazov <vascom2@gmail.com> - 75.0.3770.100-1
+- Update to 75.0.3770.100
+
 * Sat Jun 15 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> 75.0.3770.90-1
 - Update to 75.0.3770.90
 - Re bundle icu; requires 64 and up
