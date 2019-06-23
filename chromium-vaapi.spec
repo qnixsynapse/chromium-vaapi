@@ -467,12 +467,9 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
 
 sed -i 's|//third_party/usb_ids|/usr/share/hwdata|g' device/usb/BUILD.gn
 
+# Don't use static libstdc++
+sed -i '/-static-libstdc++/d' tools/gn/build/gen.py
 
-
-# Remove compiler flags not supported by our system clang
-  sed -i \
-    -e '/"-Wno-ignored-pragma-optimize"/d' \
-    build/config/compiler/BUILD.gn
 rmdir third_party/markupsafe
 ln -s %{python2_sitearch}/markupsafe third_party/markupsafe
 
