@@ -96,7 +96,11 @@ BuildRequires: libgcc, glibc, libatomic
 BuildRequires: libcap-devel, cups-devel, alsa-lib-devel
 BuildRequires: mesa-libGL-devel, mesa-libEGL-devel
 %if %{with system_minizip}
-BuildRequires:	minizip-compat-devel
+%if 0%{?fedora} >= 30
+BuildRequires: minizip-compat-devel
+%else
+BuildRequires: minizip-devel
+%endif
 %endif
 # Pipewire need this.
 %if 0%{?fedora} >= 29
