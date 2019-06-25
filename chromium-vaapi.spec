@@ -491,6 +491,7 @@ export CC=gcc CXX=g++
 
 # GN needs gold to bootstrap
 export LDFLAGS="$LDFLAGS -fuse-ld=gold"
+export CXXFLAGS="$CXXFLAGS -fno-ipa-cp-clone"
 
 gn_args=(
     is_debug=false
