@@ -56,7 +56,7 @@
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    75.0.3770.100
-Release:    2%{?dist}
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -182,7 +182,6 @@ ExclusiveArch: x86_64
 Patch1:    enable-vaapi.patch
 # Enable support for widevine
 Patch2:   widevine.patch
-Patch3:   Do-not-use-VPP-on-Linux-Add-some-info-logs-and-fix-v.patch
 Patch50:  nounrar.patch
 # Bootstrap still uses python command
 Patch51:  py2-bootstrap.patch
@@ -209,7 +208,6 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ## Apply patches here ##
 %patch1 -p1 -b .vaapi
 %patch2 -p1 -b .widevine
-%patch3 -p1 -b .fixvaapi
 %patch50 -p1 -b .nounrar
 %patch51 -p1 -b .py2boot
 %if %{with system_libicu}
@@ -542,7 +540,7 @@ gn_args+=(
 gn_args+=(
 %if %{jumbo}
     use_jumbo_build=true
-    jumbo_file_merge_limit=6
+    jumbo_file_merge_limit=5
     concurrent_links=1
 %endif
 )
@@ -663,9 +661,6 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
-* Wed Jul 03 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 75.0.3770.100-2
-- Fix vaapi regression on few intel devices, disabled vaapi post processing for Nvidia
-
 * Wed Jun 19 2019 Vasiliy N. Glazov <vascom2@gmail.com> - 75.0.3770.100-1
 - Update to 75.0.3770.100
 
