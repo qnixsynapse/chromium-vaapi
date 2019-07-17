@@ -55,8 +55,8 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    75.0.3770.100
-Release:    2%{?dist}
+Version:    75.0.3770.142
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -204,6 +204,9 @@ Patch70:    chromium-angle-gcc9.patch
 Patch71:    chromium-gcc9-r654570.patch
 Patch72:    chromium-gcc9-r666279.patch
 Patch73:    chromium-gcc9-r666714.patch
+# Add a patch from upstream to fix a bug on RenderProcesshost
+Patch74:    bindcrashfix.patch
+
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
@@ -230,6 +233,7 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch71 -p1 -b .gcc2
 %patch72 -p1 -b .gcc3
 %patch73 -p1 -b .gcc4
+%patch74 -p1 -b .render
 
 
 #Let's change the default shebang of python files.
@@ -541,7 +545,6 @@ gn_args=(
 # 'clang_base_path = "/usr"'
 # use_lld=false
   #  clang_use_chrome_plugins=false
-# Switched back to GCC, clang itself is broken
 gn_args+=(
     is_clang=false
 )
@@ -670,6 +673,11 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Wed Jul 17 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 75.0.3770.142-1
+- Update to 75.0.3770.142
+- Removed Nvidia GPU video decode blacklist
+- Add a patch to fix a bug around RenderProcessHost to avoid crash
+
 * Wed Jul 03 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 75.0.3770.100-2
 - Fix vaapi regression on few intel devices, disabled vaapi post processing for Nvidia
 
