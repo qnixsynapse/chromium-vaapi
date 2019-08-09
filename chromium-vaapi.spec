@@ -56,7 +56,7 @@
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    75.0.3770.142
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -665,6 +665,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
+* Fri Aug 09 2019 RPM Fusion Release Engineering <leigh123linux@gmail.com> - 75.0.3770.142-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
+
 * Wed Jul 17 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 75.0.3770.142-1
 - Update to 75.0.3770.142
 - Removed Nvidia GPU video decode blacklist
