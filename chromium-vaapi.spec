@@ -430,6 +430,7 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/SPIRV-Tools \
     third_party/sqlite \
     third_party/tcmalloc \
+    third_party/unrar \
     third_party/usb_ids \
     third_party/usrsctp \
     third_party/vulkan \
