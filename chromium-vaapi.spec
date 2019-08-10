@@ -186,7 +186,6 @@ Patch3:   Do-not-use-VPP-on-Linux-Add-some-info-logs-and-fix-v.patch
 Patch4:   chromium-skia-harmony.patch
 #Fix unrar wrapper: https://bugs.chromium.org/p/chromium/issues/detail?id=884521
 Patch5:	  fixunrarwrapper.patch
-Patch50:  nounrar.patch
 # Bootstrap still uses python command
 Patch51:  py2-bootstrap.patch
 # Fix building with system icu
@@ -228,7 +227,6 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch3 -p1 -b .fixvaapi
 %patch4 -p0 -b .skia
 %patch5 -p1 -b .unrarwrap
-%patch50 -p1 -b .nounrar
 %patch51 -p1 -b .py2boot
 %if %{with system_libicu}
 %patch52 -p1 -b .icu
