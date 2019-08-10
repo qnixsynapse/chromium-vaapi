@@ -1,25 +1,14 @@
-From 3f1965594ac532a55b419ecb4bcf7d0c8de6744f Mon Sep 17 00:00:00 2001
-From: Akarshan Biswas <akarshan.biswas@gmail.com>
-Date: Thu, 14 Mar 2019 17:47:30 +0530
-Subject: [PATCH] Fix building with system icu
-
----
- .../blink/renderer/platform/text/character_property_data.h      | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/third_party/blink/renderer/platform/text/character_property_data.h b/third_party/blink/renderer/platform/text/character_property_data.h
-index 7d2cf90cb..572aec782 100644
---- a/third_party/blink/renderer/platform/text/character_property_data.h
-+++ b/third_party/blink/renderer/platform/text/character_property_data.h
-@@ -247,7 +247,7 @@ static const UChar32 kIsHangulRanges[] = {
+Index: chromium-76.0.3800.0/third_party/blink/renderer/platform/text/character_property_data.h
+===================================================================
+--- chromium-76.0.3800.0.orig/third_party/blink/renderer/platform/text/character_property_data.h
++++ chromium-76.0.3800.0/third_party/blink/renderer/platform/text/character_property_data.h
+@@ -258,7 +258,7 @@ static const UChar32 kIsHangulRanges[] =
      0xFFA0, 0xFFDC,
  };
  
 -static const UChar32 kIsHangulArray[] = {};
 +static const UChar32 kIsHangulArray[] = {0xFFDC,};
  
- #if !defined(USING_SYSTEM_ICU)
  // Freezed trie tree, see character_property_data_generator.cc.
--- 
-2.20.1
+ extern const int32_t kSerializedCharacterDataSize;
 

@@ -34,9 +34,9 @@
 # Need icu version >= 64
 %bcond_with system_libicu
 # Allow testing whether libvpx can be unbundled
-%bcond_with system_libvpx
+%bcond_without system_libvpx
 # Allow testing whether ffmpeg can be unbundled
-%bcond_with system_ffmpeg
+%bcond_without system_ffmpeg
 #Allow minizip to be unbundled
 #mini-compat is going to be removed from fedora 30!
 %bcond_with system_minizip
@@ -55,8 +55,8 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    75.0.3770.142
-Release:    2%{?dist}
+Version:    76.0.3809.100
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -183,6 +183,7 @@ Patch1:    enable-vaapi.patch
 # Enable support for widevine
 Patch2:   widevine.patch
 Patch3:   Do-not-use-VPP-on-Linux-Add-some-info-logs-and-fix-v.patch
+Patch4:   chromium-skia-harmony.patch
 Patch50:  nounrar.patch
 # Bootstrap still uses python command
 Patch51:  py2-bootstrap.patch
@@ -196,12 +197,23 @@ Patch65: chromium-73.0.3683.75-pipewire-cstring-fix.patch
 # Fix header
 Patch68: Add-missing-header-to-fix-webrtc-build.patch
 # GCC patches
-Patch70:    chromium-angle-gcc9.patch
-Patch71:    chromium-gcc9-r654570.patch
-Patch72:    chromium-gcc9-r666279.patch
-Patch73:    chromium-gcc9-r666714.patch
-# Add a patch from upstream to fix a bug on RenderProcesshost
-Patch74:    bindcrashfix.patch
+Patch70: chromium-gcc9-r666279.patch
+Patch71: chromium-gcc9-r666336.patch
+Patch72: chromium-gcc9-r666401.patch
+Patch73: chromium-gcc9-r666436.patch
+Patch74: chromium-gcc9-r666619.patch
+Patch75: chromium-gcc9-r666714.patch
+Patch76: chromium-gcc9-r667064.patch
+Patch77: chromium-gcc9-r667228.patch
+Patch78: chromium-gcc9-r667260.patch
+Patch79: chromium-gcc9-r667484.patch
+Patch80: chromium-gcc9-r667901.patch
+Patch81: chromium-gcc9-r668015.patch
+Patch82: chromium-gcc9-r668033.patch
+Patch83: chromium-gcc9-r670973.patch
+Patch84: chromium-gcc9-r670980.patch
+Patch85: chromium-quiche-gcc9.patch
+
 
 %description
 chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
@@ -212,6 +224,7 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch1 -p1 -b .vaapi
 %patch2 -p1 -b .widevine
 %patch3 -p1 -b .fixvaapi
+%patch4 -p0 -b .skia
 %patch50 -p1 -b .nounrar
 %patch51 -p1 -b .py2boot
 %if %{with system_libicu}
@@ -227,15 +240,26 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 # GCC patches area
 %patch70 -p1 -b .gcc1
 %patch71 -p1 -b .gcc2
-%patch72 -p1 -b .gcc3
-%patch73 -p1 -b .gcc4
-%patch74 -p1 -b .render
-
+%patch72 -p1 -b .gcc2
+%patch73 -p1 -b .gcc3
+%patch74 -p1 -b .gcc4
+%patch75 -p1 -b .gcc5
+%patch76 -p1 -b .gcc6
+%patch77 -p1 -b .gcc7
+%patch78 -p1 -b .gcc8
+%patch79 -p1 -b .gcc9
+%patch80 -p1 -b .gcc10
+%patch81 -p1 -b .gcc11
+%patch82 -p1 -b .gcc12
+%patch83 -p1 -b .gcc13
+%patch84 -p1 -b .gcc14
+%patch85 -p1 -b .gcc15
 
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
 ./build/linux/unbundle/remove_bundled_libraries.py --do-remove \
-   base/third_party/dmg_fp \
+    base/third_party/cityhash \
+    base/third_party/dmg_fp \
     base/third_party/dynamic_annotations \
     base/third_party/icu \
     base/third_party/libevent \
@@ -275,6 +299,9 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/axe-core \
     third_party/boringssl \
     third_party/boringssl/src/third_party/fiat \
+    third_party/boringssl/src/third_party/sike \
+    third_party/boringssl/linux-aarch64/crypto/third_party/sike \
+    third_party/boringssl/linux-x86_64/crypto/third_party/sike \
     third_party/blink \
     third_party/breakpad \
     third_party/breakpad/breakpad/src/third_party/curl \
@@ -365,7 +392,7 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/node \
     third_party/node/node_modules/polymer-bundler/lib/third_party/UglifyJS2 \
     third_party/openh264 \
-    third_party/openmax_dl \
+    third_party/openscreen \
     third_party/ots \
     third_party/pdfium \
     third_party/pdfium/third_party/agg23 \
@@ -394,6 +421,7 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/s2cellid \
     third_party/sfntly \
     third_party/skia \
+    third_party/skia/include/third_party/skcms \
     third_party/skia/include/third_party/vulkan \
     third_party/skia/third_party/gif \
     third_party/skia/third_party/vulkan \
@@ -467,7 +495,9 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     zlib
 %endif
 
-sed -i 's|//third_party/usb_ids|/usr/share/hwdata|g' device/usb/BUILD.gn
+sed -i 's|//third_party/usb_ids|/usr/share/hwdata|g' \
+    services/device/public/cpp/usb/BUILD.gn
+
 
 rmdir third_party/markupsafe
 ln -s %{python2_sitearch}/markupsafe third_party/markupsafe
@@ -664,9 +694,16 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %dir %{chromiumdir}/locales
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
-%changelog
+%changelog 
+* Sat Aug 10 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 76.0.3809.100-1
+- Update to 76.0.3809.100
+
 * Fri Aug 09 2019 RPM Fusion Release Engineering <leigh123linux@gmail.com> - 75.0.3770.142-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
+
+* Sat Aug 03 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 76.0.3809.87-1
+- Update to 76.0.3809.87
+- Use system ffmpeg and libvpx
 
 * Wed Jul 17 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 75.0.3770.142-1
 - Update to 75.0.3770.142
