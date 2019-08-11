@@ -1,4 +1,4 @@
-From e3da54fcc5fbd601bb448a61d69fa064199b28bb Mon Sep 17 00:00:00 2001
+From a07806f7b76dab142efc9342c952781573a004f4 Mon Sep 17 00:00:00 2001
 From: Akarshan Biswas <akarshanbiswas@fedoraproject.org>
 Date: Tue, 9 Jul 2019 19:03:09 +0530
 Subject: [PATCH] Enable vaapi on Linux
@@ -11,10 +11,10 @@ Subject: [PATCH] Enable vaapi on Linux
  4 files changed, 20 insertions(+), 19 deletions(-)
 
 diff --git a/chrome/browser/about_flags.cc b/chrome/browser/about_flags.cc
-index 1f0fc06e1..c47080f2c 100644
+index 61bb2977b..dd9318a7e 100644
 --- a/chrome/browser/about_flags.cc
 +++ b/chrome/browser/about_flags.cc
-@@ -1390,7 +1390,7 @@ const FeatureEntry kFeatureEntries[] = {
+@@ -1450,7 +1450,7 @@ const FeatureEntry kFeatureEntries[] = {
          "disable-accelerated-video-decode",
          flag_descriptions::kAcceleratedVideoDecodeName,
          flag_descriptions::kAcceleratedVideoDecodeDescription,
@@ -22,8 +22,8 @@ index 1f0fc06e1..c47080f2c 100644
 +        kOsMac | kOsWin | kOsCrOS | kOsAndroid | kOsLinux,
          SINGLE_DISABLE_VALUE_TYPE(switches::kDisableAcceleratedVideoDecode),
      },
- #if defined(OS_WIN)
-@@ -1882,12 +1882,12 @@ const FeatureEntry kFeatureEntries[] = {
+     {"enable-history-favicons-google-server-query",
+@@ -1883,12 +1883,12 @@ const FeatureEntry kFeatureEntries[] = {
       FEATURE_VALUE_TYPE(service_manager::features::kXRSandbox)},
  #endif  // ENABLE_ISOLATED_XR_SERVICE
  #endif  // ENABLE_VR
@@ -35,15 +35,15 @@ index 1f0fc06e1..c47080f2c 100644
 +     flag_descriptions::kAcceleratedMjpegDecodeDescription, kOsCrOS | kOsLinux,
       SINGLE_DISABLE_VALUE_TYPE(switches::kDisableAcceleratedMjpegDecode)},
 -#endif  // OS_CHROMEOS
-+#endif  // OS_CHROMEOS // OS_LINUX
-     {"v8-cache-options", flag_descriptions::kV8CacheOptionsName,
-      flag_descriptions::kV8CacheOptionsDescription, kOsAll,
-      MULTI_VALUE_TYPE(kV8CacheOptionsChoices)},
++#endif  // OS_CHROMEOS  //OS_LINUX
+     {"system-keyboard-lock", flag_descriptions::kSystemKeyboardLockName,
+      flag_descriptions::kSystemKeyboardLockDescription, kOsDesktop,
+      FEATURE_VALUE_TYPE(features::kSystemKeyboardLock)},
 diff --git a/chrome/browser/flag_descriptions.cc b/chrome/browser/flag_descriptions.cc
-index 91e5c085a..d810d3054 100644
+index fe57ff6b6..2584e5cb4 100644
 --- a/chrome/browser/flag_descriptions.cc
 +++ b/chrome/browser/flag_descriptions.cc
-@@ -2941,15 +2941,21 @@ const char kMacSystemMediaPermissionsInfoUiDescription[] =
+@@ -2766,15 +2766,21 @@ const char kMacSystemMediaPermissionsInfoUiDescription[] =
  
  #endif
  
@@ -68,10 +68,10 @@ index 91e5c085a..d810d3054 100644
  const char kAppServiceAshName[] = "App Service Ash";
  const char kAppServiceAshDescription[] =
 diff --git a/chrome/browser/flag_descriptions.h b/chrome/browser/flag_descriptions.h
-index c8e596e47..f91cc2388 100644
+index 233ecb56d..9bd48777a 100644
 --- a/chrome/browser/flag_descriptions.h
 +++ b/chrome/browser/flag_descriptions.h
-@@ -1765,13 +1765,19 @@ extern const char kPermissionPromptPersistenceToggleDescription[];
+@@ -1645,13 +1645,19 @@ extern const char kPermissionPromptPersistenceToggleDescription[];
  
  #endif  // defined(OS_MACOSX)
  
@@ -94,10 +94,10 @@ index c8e596e47..f91cc2388 100644
  extern const char kAppServiceAshDescription[];
  
 diff --git a/gpu/config/software_rendering_list.json b/gpu/config/software_rendering_list.json
-index d4c3b4364..935fdeb86 100644
+index 03e251547..9eb0f1148 100644
 --- a/gpu/config/software_rendering_list.json
 +++ b/gpu/config/software_rendering_list.json
-@@ -369,17 +369,6 @@
+@@ -368,17 +368,6 @@
          "all"
        ]
      },
