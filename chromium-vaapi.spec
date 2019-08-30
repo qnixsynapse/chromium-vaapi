@@ -56,7 +56,7 @@
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
 Version:    76.0.3809.132
-Release:    2%{?dist}
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -705,8 +705,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
 %changelog
-* Fri Aug 30 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 76.0.3809.132-1
+* Fri Aug 30 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 76.0.3809.132-2
 - Update to 76.0.3809.132
+- Rebase chromium-gcc9-r666401.patch 
 
 * Mon Aug 12 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 76.0.3809.100-2
 - Fix a bug which causes chromium to reject certificates by throwing ERR_CERTIFICATE_TRANSPARENCY_REQUIRED
