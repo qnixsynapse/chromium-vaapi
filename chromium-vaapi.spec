@@ -55,8 +55,8 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    76.0.3809.100
-Release:    1%{?dist}
+Version:    76.0.3809.132
+Release:    2%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -188,6 +188,8 @@ Patch1:    enable-vaapi.patch
 Patch2:   widevine.patch
 Patch3:   Do-not-use-VPP-on-Linux-Add-some-info-logs-and-fix-v.patch
 Patch4:   chromium-skia-harmony.patch
+#Fix certificare transperancy error introduced by the current stable version of chromium
+Patch5:    cert-trans-google.patch 
 # Bootstrap still uses python command
 Patch51:  py2-bootstrap.patch
 # Fix building with system icu
@@ -228,6 +230,7 @@ chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
 %patch2 -p1 -b .widevine
 %patch3 -p1 -b .fixvaapi
 %patch4 -p0 -b .skia
+%patch5 -p1 -b .cert 
 %patch51 -p1 -b .py2boot
 %if %{with system_libicu}
 %patch52 -p1 -b .icu
@@ -701,7 +704,13 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %dir %{chromiumdir}/locales
 %{chromiumdir}/locales/*.pak
 #########################################changelogs#################################################
-%changelog 
+%changelog
+* Fri Aug 30 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 76.0.3809.132-1
+- Update to 76.0.3809.132
+
+* Mon Aug 12 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 76.0.3809.100-2
+- Fix a bug which causes chromium to reject certificates by throwing ERR_CERTIFICATE_TRANSPARENCY_REQUIRED
+
 * Sat Aug 10 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 76.0.3809.100-1
 - Update to 76.0.3809.100
 
