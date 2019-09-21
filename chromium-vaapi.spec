@@ -14,6 +14,14 @@
 %global __requires_exclude %{chromiumdir}/.*\\.so
 %global __provides_exclude_from %{chromiumdir}/.*\\.so
 #######################################CONFIGS###########################################
+# Fedora's Python 2 stack is being removed, we use the bundled Python libraries	
+# This can be revisited once we upgrade to Python 3	
+%global bundlepylibs 1
+%if 0%{bundlepylibs}
+%bcond_with system_ply
+%else
+%bcond_without system_ply
+%endif
 # This package depends on automagic byte compilation            
 # https://fedoraproject.org/wiki/Changes/No_more_automagic_Python_bytecompilation_phase_2            
 %global _python_bytecompile_extra 1
@@ -26,8 +34,6 @@
 # Require libxml2 > 2.9.4 for XML_PARSE_NOXXE
 %bcond_without system_libxml2
 
-# https://github.com/dabeaz/ply/issues/66
-%bcond_without system_ply
 
 # Allow testing whether icu can be unbundled
 # A patch fix building so enabled by default for Fedora 30
@@ -117,18 +123,25 @@ BuildRequires:  pkgconfig(wayland-cursor)
 BuildRequires:  pkgconfig(wayland-scanner)
 BuildRequires:  pkgconfig(wayland-server)
 %endif
-# remove_bundled_libraries.py --do-remove
+
+#Python stuffs
+%if 0%{?bundlepylibs}
+	
+# Using bundled bits, do nothing.
+	
+%else
 BuildRequires: python2-rpm-macros
 BuildRequires: python2-beautifulsoup4
 BuildRequires: python2-lxml
 BuildRequires: python2-html5lib
 BuildRequires: python2-markupsafe
 Buildrequires: python2-six
-%if %{with system_re2}
-BuildRequires: re2-devel
-%endif
 %if %{with system_ply}
 BuildRequires: python2-ply
+%endif
+%endif
+%if %{with system_re2}
+BuildRequires: re2-devel
 %endif
 # replace_gn_files.py --system-libraries
 BuildRequires: flac-devel
@@ -342,6 +355,9 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/libyuv \
     third_party/lss \
     third_party/lzma_sdk \
+%if 0%{?bundlepylibs}	
+	third_party/markupsafe \
+%endif
     third_party/mesa \
     third_party/metrics_proto \
 %if %{ozone}
@@ -469,14 +485,15 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
 sed -i 's|//third_party/usb_ids|/usr/share/hwdata|g' \
     services/device/public/cpp/usb/BUILD.gn
 
-
+%if !0%{?bundlepylibs}
 rmdir third_party/markupsafe
 ln -s %{python2_sitearch}/markupsafe third_party/markupsafe
-
 %if %{with system_ply}
 rmdir third_party/ply
 ln -s %{python2_sitelib}/ply third_party/ply
 %endif
+%endif
+
 # Fix the path to nodejs binary
 mkdir -p third_party/node/linux/node-linux-x64/bin
 ln -s %{_bindir}/node third_party/node/linux/node-linux-x64/bin/node
@@ -668,6 +685,7 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 * Sat Sep 21 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 77.0.3865.90-1
 - Update to 77.0.3865.90
 - Disabled Nvidia support
+- Use the bundled python2 as python2 is going to be removed from Fedora
 
 * Fri Aug 30 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 76.0.3809.132-2
 - Update to 76.0.3809.132
