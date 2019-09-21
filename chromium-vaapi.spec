@@ -128,6 +128,8 @@ BuildRequires:  pkgconfig(wayland-server)
 %if 0%{?bundlepylibs}
 	
 # Using bundled bits, do nothing.
+#This is needed for remove_bundled_libraries.py
+BuildRequires: /usr/bin/python2
 	
 %else
 BuildRequires: python2-rpm-macros
