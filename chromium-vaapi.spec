@@ -288,6 +288,10 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/catapult \
     third_party/catapult/common/py_vulcanize/third_party/rcssmin \
     third_party/catapult/common/py_vulcanize/third_party/rjsmin \
+    %if 0%{?bundlepylibs}
+    third_party/catapult/third_party/beautifulsoup4 \
+    third_party/catapult/third_party/html5lib-python \
+    %endif
     third_party/catapult/third_party/polymer \
     third_party/catapult/third_party/six \
     third_party/catapult/tracing/third_party/d3 \
