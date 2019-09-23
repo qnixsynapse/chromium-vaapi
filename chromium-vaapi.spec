@@ -516,7 +516,6 @@ gn_args=(
     use_vaapi=true
     is_component_build=false
     use_sysroot=false
-    enable_swiftshader=false
     use_custom_libcxx=false
     use_aura=true
     'system_libdir="%{_lib}"'
@@ -605,6 +604,7 @@ ninja  %{_smp_mflags} -C %{target}   chrome chrome_sandbox chromedriver
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{chromiumdir}/locales
 mkdir -p %{buildroot}%{chromiumdir}/MEIPreload
+mkdir -p %{buildroot}%{chromiumdir}/swiftshader
 mkdir -p %{buildroot}%{_mandir}/man1
 mkdir -p %{buildroot}%{_metainfodir}
 mkdir -p %{buildroot}%{_datadir}/applications
@@ -633,6 +633,9 @@ install -m 644 %{target}/*.pak %{buildroot}%{chromiumdir}/
 install -m 644 %{target}/locales/*.pak %{buildroot}%{chromiumdir}/locales/
 install -m 644 %{target}/xdg*  %{buildroot}%{chromiumdir}/
 install -m 644 %{target}/MEIPreload/* %{buildroot}%{chromiumdir}/MEIPreload/
+install -m 755 %{target}/swiftshader/*.so %{buildroot}%{chromiumdir}/swiftshader/
+
+# Icons
 for i in 16 32; do
     mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
     install -m 644 chrome/app/theme/default_100_percent/chromium/product_logo_$i.png \
@@ -682,6 +685,10 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/MEIPreload/preloaded_data.pb
 %dir %{chromiumdir}/locales
 %{chromiumdir}/locales/*.pak
+%dir %{chromiumdir}/swiftshader
+%{chromiumdir}/swiftshader/libEGL.so
+%{chromiumdir}/swiftshader/libGLESv2.so
+%{chromiumdir}/swiftshader/libvulkan.so
 #########################################changelogs#################################################
 %changelog
 * Sat Sep 21 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 77.0.3865.90-1
