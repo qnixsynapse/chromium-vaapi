@@ -219,6 +219,9 @@ Patch71: chromium-unbundle-zlib.patch
 Patch72: chromium-base-location.patch
 Patch73: chromium-gcc9-r684731.patch
 
+# This patch fixes linking when build with system harfbuzz is enabled
+Patch74: link-against-harfbuzz-subset.patch
+
 
 %description
 %{name} is an open-source web browser, powered by WebKit (Blink)
@@ -230,6 +233,9 @@ Patch73: chromium-gcc9-r684731.patch
 %endif
 %if !%{freeworld}
 %patch54 -p1 -R
+%endif
+%if !%{with system_harfbuzz}
+%patch74 -p1 -R
 %endif
 
 
