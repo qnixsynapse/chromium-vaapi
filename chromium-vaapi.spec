@@ -26,7 +26,11 @@
 # https://fedoraproject.org/wiki/Changes/No_more_automagic_Python_bytecompilation_phase_2            
 %global _python_bytecompile_extra 1
 #Require harfbuzz >= 2.4.0 for hb_subset_input_set_retain_gids
+%if 0%{?fedora} >= 31
+%bcond_without system_harfbuzz
+%else
 %bcond_with system_harfbuzz
+%endif
 # Require libxml2 > 2.9.4 for XML_PARSE_NOXXE
 %bcond_without system_libxml2
 
