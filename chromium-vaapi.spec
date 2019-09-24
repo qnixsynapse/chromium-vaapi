@@ -14,11 +14,19 @@
 %global __requires_exclude %{chromiumdir}/.*\\.so
 %global __provides_exclude_from %{chromiumdir}/.*\\.so
 #######################################CONFIGS###########################################
+# Fedora's Python 2 stack is being removed, we use the bundled Python libraries	
+# This can be revisited once we upgrade to Python 3	
+%global bundlepylibs 1
+%if 0%{bundlepylibs}
+%bcond_with system_ply
+%else
+%bcond_without system_ply
+%endif
 # This package depends on automagic byte compilation            
 # https://fedoraproject.org/wiki/Changes/No_more_automagic_Python_bytecompilation_phase_2            
 %global _python_bytecompile_extra 1
-#Require harfbuzz >= 2 for hb_ot_tags_from_script_and_language
-%if 0%{?fedora} >= 30
+#Require harfbuzz >= 2.4.0 for hb_subset_input_set_retain_gids
+%if 0%{?fedora} >= 31
 %bcond_without system_harfbuzz
 %else
 %bcond_with system_harfbuzz
@@ -26,8 +34,6 @@
 # Require libxml2 > 2.9.4 for XML_PARSE_NOXXE
 %bcond_without system_libxml2
 
-# https://github.com/dabeaz/ply/issues/66
-%bcond_without system_ply
 
 # Allow testing whether icu can be unbundled
 # A patch fix building so enabled by default for Fedora 30
@@ -39,7 +45,7 @@
 %bcond_without system_ffmpeg
 #Allow minizip to be unbundled
 #mini-compat is going to be removed from fedora 30!
-%bcond_with system_minizip
+%bcond_without system_minizip
 # Need re2 ver. 2016.07.21 for re2::LazyRE2 
 %bcond_with system_re2
 
@@ -55,8 +61,8 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    76.0.3809.132
-Release:    2%{?dist}
+Version:    77.0.3865.90
+Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
 URL:        https://www.chromium.org/Home
@@ -117,18 +123,27 @@ BuildRequires:  pkgconfig(wayland-cursor)
 BuildRequires:  pkgconfig(wayland-scanner)
 BuildRequires:  pkgconfig(wayland-server)
 %endif
-# remove_bundled_libraries.py --do-remove
+
+#Python stuffs
+%if 0%{?bundlepylibs}
+	
+# Using bundled bits, do nothing.
+#This is needed for remove_bundled_libraries.py
+BuildRequires: /usr/bin/python2
+	
+%else
 BuildRequires: python2-rpm-macros
 BuildRequires: python2-beautifulsoup4
 BuildRequires: python2-lxml
 BuildRequires: python2-html5lib
 BuildRequires: python2-markupsafe
 Buildrequires: python2-six
-%if %{with system_re2}
-BuildRequires: re2-devel
-%endif
 %if %{with system_ply}
 BuildRequires: python2-ply
+%endif
+%endif
+%if %{with system_re2}
+BuildRequires: re2-devel
 %endif
 # replace_gn_files.py --system-libraries
 BuildRequires: flac-devel
@@ -182,8 +197,8 @@ ExclusiveArch: x86_64
 Patch1:    enable-vaapi.patch
 # Enable support for widevine
 Patch2:   widevine.patch
-Patch3:   Do-not-use-VPP-on-Linux-Add-some-info-logs-and-fix-v.patch
-Patch4:   chromium-skia-harmony.patch
+#Use Normal BAM on Linux
+Patch3:   UseNormalBAM.patch
 #Fix certificare transperancy error introduced by the current stable version of chromium
 Patch5:    cert-trans-google.patch 
 # Bootstrap still uses python command
@@ -198,63 +213,31 @@ Patch65: chromium-73.0.3683.75-pipewire-cstring-fix.patch
 # Fix header
 Patch68: Add-missing-header-to-fix-webrtc-build.patch
 # GCC patches
-Patch70: chromium-gcc9-r666279.patch
-Patch71: chromium-gcc9-r666336.patch
-Patch72: chromium-gcc9-r666401.patch
-Patch73: chromium-gcc9-r666436.patch
-Patch74: chromium-gcc9-r666619.patch
-Patch75: chromium-gcc9-r666714.patch
-Patch76: chromium-gcc9-r667064.patch
-Patch77: chromium-gcc9-r667228.patch
-Patch78: chromium-gcc9-r667260.patch
-Patch79: chromium-gcc9-r667484.patch
-Patch80: chromium-gcc9-r667901.patch
-Patch81: chromium-gcc9-r668015.patch
-Patch82: chromium-gcc9-r668033.patch
-Patch83: chromium-gcc9-r670973.patch
-Patch84: chromium-gcc9-r670980.patch
-Patch85: chromium-quiche-gcc9.patch
+Patch69: chromium-gcc9-r681333.patch
+Patch70: chromium-gcc9-r681321.patch
+Patch71: chromium-unbundle-zlib.patch
+Patch72: chromium-base-location.patch
+Patch73: chromium-gcc9-r684731.patch
+
+# This patch fixes linking when build with system harfbuzz is enabled
+Patch74: link-against-harfbuzz-subset.patch
 
 
 %description
-chromium-vaapi is an open-source web browser, powered by WebKit (Blink)
+%{name} is an open-source web browser, powered by WebKit (Blink)
 ############################################PREP###########################################################
 %prep
-%autosetup -n chromium-%{version} -N
-## Apply patches here ##
-%patch1 -p1 -b .vaapi
-%patch2 -p1 -b .widevine
-%patch3 -p1 -b .fixvaapi
-%patch4 -p0 -b .skia
-%patch5 -p1 -b .cert 
-%patch51 -p1 -b .py2boot
-%if %{with system_libicu}
-%patch52 -p1 -b .icu
+%autosetup -n chromium-%{version} -p1
+%if !%{with system_libicu}
+%patch52 -p1  -R
 %endif
-%if %{freeworld}
-%patch54 -p1 -b .brand
+%if !%{freeworld}
+%patch54 -p1 -R
 %endif
-%if 0%{?fedora} >= 29
-%patch65 -p1 -b .pipewire
+%if !%{with system_harfbuzz}
+%patch74 -p1 -R
 %endif
-%patch68 -p1 -b .socket
-# GCC patches area
-%patch70 -p1 -b .gcc1
-%patch71 -p1 -b .gcc2
-%patch72 -p1 -b .gcc2
-%patch73 -p1 -b .gcc3
-%patch74 -p1 -b .gcc4
-%patch75 -p1 -b .gcc5
-%patch76 -p1 -b .gcc6
-%patch77 -p1 -b .gcc7
-%patch78 -p1 -b .gcc8
-%patch79 -p1 -b .gcc9
-%patch80 -p1 -b .gcc10
-%patch81 -p1 -b .gcc11
-%patch82 -p1 -b .gcc12
-%patch83 -p1 -b .gcc13
-%patch84 -p1 -b .gcc14
-%patch85 -p1 -b .gcc15
+
 
 #Let's change the default shebang of python files.
 find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(python\|env python\)[23]\?=#!%{__python2}=' {} +
@@ -311,6 +294,10 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/catapult \
     third_party/catapult/common/py_vulcanize/third_party/rcssmin \
     third_party/catapult/common/py_vulcanize/third_party/rjsmin \
+    %if 0%{?bundlepylibs}
+    third_party/catapult/third_party/beautifulsoup4 \
+    third_party/catapult/third_party/html5lib-python \
+    %endif
     third_party/catapult/third_party/polymer \
     third_party/catapult/third_party/six \
     third_party/catapult/tracing/third_party/d3 \
@@ -380,6 +367,9 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/libyuv \
     third_party/lss \
     third_party/lzma_sdk \
+%if 0%{?bundlepylibs}	
+	third_party/markupsafe \
+%endif
     third_party/mesa \
     third_party/metrics_proto \
 %if %{ozone}
@@ -392,8 +382,10 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/nasm \
     third_party/node \
     third_party/node/node_modules/polymer-bundler/lib/third_party/UglifyJS2 \
+    third_party/one_euro_filter \
     third_party/openh264 \
     third_party/openscreen \
+    third_party/openscreen/src/third_party/tinycbor/src/src \
     third_party/ots \
     third_party/pdfium \
     third_party/pdfium/third_party/agg23 \
@@ -432,6 +424,11 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
     third_party/spirv-headers \
     third_party/SPIRV-Tools \
     third_party/sqlite \
+    third_party/swiftshader \
+    third_party/swiftshader/third_party/llvm-7.0 \
+    third_party/swiftshader/third_party/llvm-subzero \
+    third_party/swiftshader/third_party/subzero \
+    third_party/swiftshader/third_party/SPIRV-Headers/include/spirv/unified1 \
     third_party/tcmalloc \
     third_party/unrar \
     third_party/usb_ids \
@@ -500,14 +497,15 @@ find -depth -type f -writable -name "*.py" -exec sed -iE '1s=^#! */usr/bin/\(pyt
 sed -i 's|//third_party/usb_ids|/usr/share/hwdata|g' \
     services/device/public/cpp/usb/BUILD.gn
 
-
+%if !0%{?bundlepylibs}
 rmdir third_party/markupsafe
 ln -s %{python2_sitearch}/markupsafe third_party/markupsafe
-
 %if %{with system_ply}
 rmdir third_party/ply
 ln -s %{python2_sitelib}/ply third_party/ply
 %endif
+%endif
+
 # Fix the path to nodejs binary
 mkdir -p third_party/node/linux/node-linux-x64/bin
 ln -s %{_bindir}/node third_party/node/linux/node-linux-x64/bin/node
@@ -528,7 +526,6 @@ gn_args=(
     use_vaapi=true
     is_component_build=false
     use_sysroot=false
-    enable_swiftshader=false
     use_custom_libcxx=false
     use_aura=true
     'system_libdir="%{_lib}"'
@@ -617,6 +614,7 @@ ninja  %{_smp_mflags} -C %{target}   chrome chrome_sandbox chromedriver
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{chromiumdir}/locales
 mkdir -p %{buildroot}%{chromiumdir}/MEIPreload
+mkdir -p %{buildroot}%{chromiumdir}/swiftshader
 mkdir -p %{buildroot}%{_mandir}/man1
 mkdir -p %{buildroot}%{_metainfodir}
 mkdir -p %{buildroot}%{_datadir}/applications
@@ -645,12 +643,15 @@ install -m 644 %{target}/*.pak %{buildroot}%{chromiumdir}/
 install -m 644 %{target}/locales/*.pak %{buildroot}%{chromiumdir}/locales/
 install -m 644 %{target}/xdg*  %{buildroot}%{chromiumdir}/
 install -m 644 %{target}/MEIPreload/* %{buildroot}%{chromiumdir}/MEIPreload/
+install -m 755 %{target}/swiftshader/*.so %{buildroot}%{chromiumdir}/swiftshader/
+
+# Icons
 for i in 16 32; do
     mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
     install -m 644 chrome/app/theme/default_100_percent/chromium/product_logo_$i.png \
         %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps/%{name}.png
 done
-for i in 22 24 32 48 64 128 256; do
+for i in 24 32 48 64 128 256; do
     if [ ${i} = 32 ]; then ext=xpm; else ext=png; fi
     if [ ${i} = 32 ]; then dir=linux/; else dir=; fi
     mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
@@ -669,7 +670,6 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/gnome-control-center/default-apps/%{name}.xml
 %{_datadir}/icons/hicolor/16x16/apps/%{name}.png
-%{_datadir}/icons/hicolor/22x22/apps/%{name}.png
 %{_datadir}/icons/hicolor/24x24/apps/%{name}.png
 %{_datadir}/icons/hicolor/32x32/apps/%{name}.png
 %{_datadir}/icons/hicolor/32x32/apps/%{name}.xpm
@@ -695,9 +695,18 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/MEIPreload/preloaded_data.pb
 %dir %{chromiumdir}/locales
 %{chromiumdir}/locales/*.pak
+%dir %{chromiumdir}/swiftshader
+%{chromiumdir}/swiftshader/libEGL.so
+%{chromiumdir}/swiftshader/libGLESv2.so
+%{chromiumdir}/swiftshader/libvulkan.so
 #########################################changelogs#################################################
 %changelog
-* Fri Aug 30 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 76.0.3809.132-1
+* Sat Sep 21 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 77.0.3865.90-1
+- Update to 77.0.3865.90
+- Disabled Nvidia support
+- Use the bundled python2 as python2 is going to be removed from Fedora
+
+* Fri Aug 30 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 76.0.3809.132-2
 - Update to 76.0.3809.132
 
 * Mon Aug 12 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 76.0.3809.100-2
