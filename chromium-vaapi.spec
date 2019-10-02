@@ -39,6 +39,7 @@
 # A patch fix building so enabled by default for Fedora 30
 # Need icu version >= 64
 %bcond_with system_libicu
+%if 0%{?fedora} >= 30
 # Allow testing whether libvpx can be unbundled
 %bcond_without system_libvpx
 # Allow testing whether ffmpeg can be unbundled
@@ -46,6 +47,14 @@
 #Allow minizip to be unbundled
 #mini-compat is going to be removed from fedora 30!
 %bcond_without system_minizip
+%else
+%bcond_with system_libvpx
+%bcond_with system_ffmpeg
+#Allow minizip to be unbundled
+#mini-compat is going to be removed from fedora 30!
+%bcond_with system_minizip
+%endif
+
 # Need re2 ver. 2016.07.21 for re2::LazyRE2 
 %bcond_with system_re2
 
