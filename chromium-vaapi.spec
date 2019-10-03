@@ -14,9 +14,13 @@
 %global __requires_exclude %{chromiumdir}/.*\\.so
 %global __provides_exclude_from %{chromiumdir}/.*\\.so
 #######################################CONFIGS###########################################
+%if 0%{?fedora} >= 30
 # Fedora's Python 2 stack is being removed, we use the bundled Python libraries	
 # This can be revisited once we upgrade to Python 3	
 %global bundlepylibs 1
+%else
+%global bundlepylibs 0
+%endif
 %if 0%{bundlepylibs}
 %bcond_with system_ply
 %else
@@ -31,8 +35,6 @@
 %else
 %bcond_with system_harfbuzz
 %endif
-# Require libxml2 > 2.9.4 for XML_PARSE_NOXXE
-%bcond_without system_libxml2
 
 
 # Allow testing whether icu can be unbundled
@@ -47,12 +49,16 @@
 #Allow minizip to be unbundled
 #mini-compat is going to be removed from fedora 30!
 %bcond_without system_minizip
+# Require libxml2 > 2.9.4 for XML_PARSE_NOXXE
+%bcond_without system_libxml2
 %else
 %bcond_with system_libvpx
 %bcond_with system_ffmpeg
 #Allow minizip to be unbundled
 #mini-compat is going to be removed from fedora 30!
 %bcond_with system_minizip
+# Require libxml2 > 2.9.4 for XML_PARSE_NOXXE
+%bcond_with system_libxml2
 %endif
 
 # Need re2 ver. 2016.07.21 for re2::LazyRE2 
@@ -246,6 +252,9 @@ Patch74: link-against-harfbuzz-subset.patch
 %endif
 %if !%{freeworld}
 %patch54 -p1 -R
+%endif
+%if !%{with system_minizip}
+%patch71 -p1 -R
 %endif
 %if !%{with system_harfbuzz}
 %patch74 -p1 -R
