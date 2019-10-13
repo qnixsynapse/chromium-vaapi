@@ -553,7 +553,6 @@ gn_args=(
     fatal_linker_warnings=false
     treat_warnings_as_errors=false
     linux_use_bundled_binutils=false
-    blink_symbol_level = 0
     fieldtrial_testing_like_official_build=true
     'custom_toolchain="//build/toolchain/linux/unbundle:default"'
     'host_toolchain="//build/toolchain/linux/unbundle:default"'
