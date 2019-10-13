@@ -70,7 +70,7 @@
 %global ozone 0
 ##############################Package Definitions######################################
 Name:       chromium-vaapi
-Version:    77.0.3865.90
+Version:    77.0.3865.120
 Release:    1%{?dist}
 Summary:    A Chromium web browser with video decoding acceleration
 License:    BSD and LGPLv2+ and ASL 2.0 and IJG and MIT and GPLv2+ and ISC and OpenSSL and (MPLv1.1 or GPLv2 or LGPLv2)
@@ -562,7 +562,6 @@ gn_args=(
     fatal_linker_warnings=false
     treat_warnings_as_errors=false
     linux_use_bundled_binutils=false
-    blink_symbol_level = 0
     fieldtrial_testing_like_official_build=true
     'custom_toolchain="//build/toolchain/linux/unbundle:default"'
     'host_toolchain="//build/toolchain/linux/unbundle:default"'
@@ -710,6 +709,9 @@ appstream-util validate-relax --nonet "%{buildroot}%{_metainfodir}/%{name}.appda
 %{chromiumdir}/swiftshader/libvulkan.so
 #########################################changelogs#################################################
 %changelog
+* Sun Oct 13 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 77.0.3865.120-1
+- Update to 77.0.3865.120
+
 * Sat Sep 21 2019 Akarshan Biswas <akarshanbiswas@fedoraproject.org> - 77.0.3865.90-1
 - Update to 77.0.3865.90
 - Disabled Nvidia support
