@@ -41,9 +41,9 @@
 %bcond_with system_libicu
 %if 0%{?fedora} >= 30
 # Allow testing whether libvpx can be unbundled
-%bcond_without system_libvpx
+%bcond_with system_libvpx
 # Allow testing whether ffmpeg can be unbundled
-%bcond_without system_ffmpeg
+%bcond_with system_ffmpeg
 #Allow minizip to be unbundled
 #mini-compat is going to be removed from fedora 30!
 %bcond_without system_minizip
