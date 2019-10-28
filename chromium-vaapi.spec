@@ -229,6 +229,7 @@ Patch74: chromium-gcc9-r694853.patch
 Patch75: chromium-gcc9-r696834.patch
 Patch76: chromium-gcc9-r706467.patch
 Patch77: chromium-v8-gcc9.patch
+Patch78: chromium-gcc9-dns_util-ambiguous-ctor.patch
 
 %description
 %{name} is an open-source web browser, powered by WebKit (Blink)
