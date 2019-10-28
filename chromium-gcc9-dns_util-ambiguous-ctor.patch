@@ -1,0 +1,34 @@
+From 955fa508686054c120e5bf1808a8e4f7f1d3c0ad Mon Sep 17 00:00:00 2001
+From: Akarshan Biswas <akarshanbiswas@fedoraproject.org>
+Date: Sun, 27 Oct 2019 20:46:10 +0530
+Subject: [PATCH] Add std vector to Doh upgradable servers
+
+---
+ net/dns/dns_util.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/dns/dns_util.cc b/net/dns/dns_util.cc
+index d83ff7c15..ce8b786fd 100644
+--- a/net/dns/dns_util.cc
++++ b/net/dns/dns_util.cc
+@@ -144,7 +144,7 @@ const std::vector<const DohUpgradeEntry>& GetDohUpgradeList() {
+   // DohProviderId histogram suffix list in
+   // tools/metrics/histograms/histograms.xml.
+   static const base::NoDestructor<std::vector<const DohUpgradeEntry>>
+-      upgradable_servers({
++      upgradable_servers(std::vector<DohUpgradeEntry>({
+           DohUpgradeEntry(
+               "CleanBrowsingAdult",
+               {"185.228.168.10", "185.228.169.11", "2a0d:2a00:1::1",
+@@ -215,7 +215,7 @@ const std::vector<const DohUpgradeEntry>& GetDohUpgradeList() {
+               {"9.9.9.9", "149.112.112.112", "2620:fe::fe", "2620:fe::9"},
+               {"dns.quad9.net", "dns9.quad9.net"} /* DoT hostname */,
+               {"https://dns.quad9.net/dns-query", true /* use_post */}),
+-      });
++      }));
+   return *upgradable_servers;
+ }
+ 
+-- 
+2.21.0
+
